@@ -321,12 +321,13 @@ const OtpVerification: React.FC = () => {
         // Store the token
         await AsyncStorage.setItem('userToken', response.data.output.token);
         await AsyncStorage.setItem('customerID', response.data.output.CustomerID.toString());
-        await AsyncStorage.setItem('displayName', response.data.output.DisplayName);
+        await AsyncStorage.setItem("Disp_name", response.data.output.DisplayName);
+        // setDisplayName(response.data.output.DisplayName);
 
         // Configure axios defaults for future requests
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.output.token}`;
 
-        Alert.alert('Success', `Welcome ${response.data.output.DisplayName}!`);
+        Alert.alert('Success', `Welcome to ${response.data.output.DisplayName}!`);
         navigation.navigate('Main');
       } else {
         Alert.alert('Error', 'Invalid response from server');

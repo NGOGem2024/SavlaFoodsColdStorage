@@ -11,7 +11,7 @@ import BottomTabNavigator from './Frontend/Screens/BottomTabs/BottomTabNavigator
 import CartScreen from './Frontend/Screens/CartScreen';
 import Category from './Frontend/Screens/Category';
 import { CartProvider } from './Frontend/Screens/contexts/CartContext';
-import { CustomerProvider } from './Frontend/Screens/contexts/CustomerContext';
+import { DisplayNameProvider } from './Frontend/Screens/contexts/DisplayNameContext';
 import { NotificationProvider } from './Frontend/Screens/contexts/NotificationContext';
 import LotReportScreen from './Frontend/Screens/LotReportScreen';
 import OtpVerification from './Frontend/Screens/OtpVerificationScreen';
@@ -65,7 +65,7 @@ const MainStackNavigator = () => (
 
 export default function App() {
   return (
-    <CustomerProvider>
+    <DisplayNameProvider>
       <CartProvider>
         <NotificationProvider>
           <NavigationContainer>
@@ -78,6 +78,6 @@ export default function App() {
           </NavigationContainer>
         </NotificationProvider>
       </CartProvider>
-    </CustomerProvider>
+    </DisplayNameProvider>
   );
 }
