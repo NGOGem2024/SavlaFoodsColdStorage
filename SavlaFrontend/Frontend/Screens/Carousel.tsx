@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Image, StyleSheet, Dimensions, Animated, FlatList } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Dimensions, FlatList, Image, StyleSheet, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -56,9 +56,8 @@ const styles = StyleSheet.create({
   },
   carouselImage: {
     width,
-    height: 220,
-    resizeMode: 'cover',
-      
+    height: 180,
+    resizeMode: 'cover',      
   },
 });
 

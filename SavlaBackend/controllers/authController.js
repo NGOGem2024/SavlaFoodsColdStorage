@@ -71,50 +71,79 @@ const authController = {
       });
     }
   },
-
-  getItemCatSubCat: async (req, res) => {
+   async getItemCatSubCat  (req, res) {
     const { CustomerID } = req.body;
     const { displayName } = req.user; // Get displayName from the authenticated user
     
+    if (!CustomerID) {
+      return res.status(400).json({ 
+        message: 'CustomerID is required'
+      });
+    }
+  
     try {
+      // First verify if the customer exists
       const customerCheck = await db.execute(
-        `SELECT FK_CUSTOMER_ID 
-         FROM CUSTOMER_LOGIN 
-         WHERE FK_CUSTOMER_ID = :CustomerID`,
+        `SELECT CL.FK_CUSTOMER_ID 
+         FROM CUSTOMER_LOGIN CL
+         JOIN CUSTOMER C ON CL.FK_CUSTOMER_ID = C.CUSTOMER_ID
+         WHERE CL.FK_CUSTOMER_ID = :CustomerID`,
         { CustomerID },
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-
+  
       if (customerCheck.rows.length === 0) {
-        return res.status(404).json({ message: 'Customer not found' });
+        return res.status(404).json({ 
+          message: 'Customer not found',
+          debug: `No customer found with ID: ${CustomerID}`
+        });
       }
-
+  
+      // Get categories and subcategories for the specific customer
       const result = await db.execute(
         `SELECT 
-           ITEM_CATEG_ID AS CATID,
-           ITEM_CATEG_CODE AS CATCODE,
-           ITEM_CATEG_NAME AS CATDESC,
-           ITEM_SUB_CATEGORY_ID AS SUBCATID,
-           SUB_CATEGORY_CODE AS SUBCATCODE,
-           SUB_CATEGORY_NAME AS SUBCATDESC,
-           CAT_IMGFILE,
-           SUBCAT_IMGFILE
-         FROM ITEMCAT_SUBCAT`,
-        {},
+          ICS.ITEM_CATEG_ID AS CATID,
+          ICS.ITEM_CATEG_CODE AS CATCODE,
+          ICS.ITEM_CATEG_NAME AS CATDESC,
+          ICS.ITEM_SUB_CATEGORY_ID AS SUBCATID,
+          ICS.SUB_CATEGORY_CODE AS SUBCATCODE,
+          ICS.SUB_CATEGORY_NAME AS SUBCATDESC,
+          ICS.CAT_IMGFILE,
+          ICS.SUBCAT_IMGFILE
+        FROM 
+          ITEMCAT_SUBCAT ICS
+        INNER JOIN 
+          CUSTOMER_LOGIN CL ON ICS.FK_CUSTOMER_ID = CL.FK_CUSTOMER_ID
+        WHERE 
+          CL.FK_CUSTOMER_ID = :CustomerID
+        ORDER BY 
+          ICS.ITEM_CATEG_ID, 
+          ICS.ITEM_SUB_CATEGORY_ID`,
+        { CustomerID },
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-
+  
       if (result.rows && result.rows.length > 0) {
         res.json({
-          input: { CustomerID, displayName },
+          input: { 
+            CustomerID, 
+            displayName 
+          },
           output: result.rows
         });
       } else {
-        res.status(404).json({ message: 'No item categories or subcategories found' });
+        res.status(404).json({ 
+          message: 'No item categories or subcategories found for this customer',
+          debug: `No data found for CustomerID: ${CustomerID}`
+        });
       }
+  
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error', error: error.message });
+      console.error('Database error:', error);
+      res.status(500).json({ 
+        message: 'Server error',
+        debug: error.message 
+      });
     }
   },
 

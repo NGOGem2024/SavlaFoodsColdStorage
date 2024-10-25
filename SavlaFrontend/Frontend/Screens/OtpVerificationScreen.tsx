@@ -327,7 +327,7 @@ const OtpVerification: React.FC = () => {
         // Configure axios defaults for future requests
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.output.token}`;
 
-        Alert.alert('Success', `Welcome to ${response.data.output.DisplayName}!`);
+        // Alert.alert('Success', `Welcome to ${response.data.output.DisplayName}!`);
         navigation.navigate('Main');
       } else {
         Alert.alert('Error', 'Invalid response from server');
@@ -386,7 +386,7 @@ const OtpVerification: React.FC = () => {
               source={require('../../assets/New folder/SavlaLogo.png')}
               style={styles.logo}
             />
-            <Text style={styles.title}>Unicorp Enterprises</Text>
+            <Text style={styles.title}>LOGIN</Text>
             <Text style={styles.subtitle}>Sign in with your credentials</Text>
           </View>
 
@@ -418,10 +418,10 @@ const OtpVerification: React.FC = () => {
               <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
 
-            <Text style={styles.reg}>New User?</Text>
+            {/* <Text style={styles.reg}>New User?</Text>
             <TouchableOpacity onPress={handleRegister}>
               <Text style={styles.registerLink}>Register here</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </ScrollView>
       </ImageBackground>
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     marginTop: 90,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#473c3c',
     marginTop: 25,

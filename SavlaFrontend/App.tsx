@@ -13,6 +13,7 @@ import Category from './Frontend/Screens/Category';
 import { CartProvider } from './Frontend/Screens/contexts/CartContext';
 import { DisplayNameProvider } from './Frontend/Screens/contexts/DisplayNameContext';
 import { NotificationProvider } from './Frontend/Screens/contexts/NotificationContext';
+import ItemDetailScreen from './Frontend/Screens/ItemDetailScreen';
 import LotReportScreen from './Frontend/Screens/LotReportScreen';
 import OtpVerification from './Frontend/Screens/OtpVerificationScreen';
 import SplashScreen from './Frontend/Screens/SplashScreen';
@@ -35,6 +36,7 @@ type MainStackParamList = {
   ProductSearch: undefined;
   OrderPlacement: undefined;
   Category: undefined;
+  ItemDetailScreen:undefined;
   CartScreen: undefined;
   LotReportScreen: { item: any };
 };
@@ -58,6 +60,7 @@ const MainStackNavigator = () => (
       options={({ route }) => ({ title: route.params.category })}
     />       */}
     <MainStack.Screen name="Category" component={Category}options={{headerShown: true}}/>
+    <MainStack.Screen name="ItemDetailScreen" component={ItemDetailScreen}options={{headerShown: true}}/>
     <MainStack.Screen name="CartScreen" component={CartScreen} />
     <MainStack.Screen name="LotReportScreen" component={LotReportScreen} />            
   </MainStack.Navigator>

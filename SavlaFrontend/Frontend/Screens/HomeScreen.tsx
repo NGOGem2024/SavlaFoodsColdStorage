@@ -1,18 +1,33 @@
-
-import { MaterialIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NavigationProp, RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import axios from 'axios';
-import { default as React, useCallback, useEffect, useState } from 'react';
-import { Alert, Dimensions, FlatList, Image, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { auth } from '../../firebaseconfig';
-import { getImage } from '../utils/imageLoader';
-import Carousel from './Carousel';
-import { useCart } from './contexts/CartContext';
-import { useDisplayName } from './contexts/DisplayNameContext';
+import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  NavigationProp,
+  RouteProp,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
+import axios from "axios";
+import { default as React, useCallback, useEffect, useState } from "react";
+import {
+  Alert,
+  Dimensions,
+  FlatList,
+  Image,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { auth } from "../../firebaseconfig";
+import { getImage } from "../utils/imageLoader";
+import Carousel from "./Carousel";
+import { useCart } from "./contexts/CartContext";
+import { useDisplayName } from "./contexts/DisplayNameContext";
 
 const BACKEND_URL = "http://192.168.1.3:3000";
- 
 
 type RootStackParamList = {
   Stocks: undefined;
@@ -24,7 +39,7 @@ type RootStackParamList = {
   ProductSearch: undefined;
   HomeScreen: { customerID?: string };
   OtpVerificationScreen: undefined;
-  Category: { category: string };
+  Category: { category: string, categoryId: string };
   CartScreen: undefined;
 };
 
@@ -55,34 +70,8 @@ const HomeScreen: React.FC = () => {
   const [showAllCards, setShowAllCards] = useState(false);
   const { cart } = useCart();
   const cartItemCount = cart.length;
-   
-  // useEffect(() => {
-  //   const fetchCustomerInfo = async () => {
-  //     try {
-  //       let id = await AsyncStorage.getItem("customerID");
-  //       let name = await AsyncStorage.getItem("Disp_name");
-  //       if (id && name) {
-  //         setCustomerID(id);
-  //         setDisp_name(name);
-  //       } else {
-  //         const response = await axios.get("http://192.168.1.3/getCustomerID");
-  //         id = response.data.customerID;
-  //         name = response.data.Disp_name;
-  //         setCustomerID(id);
-  //         setDisp_name(name);
-  //         await AsyncStorage.setItem("customerID", id || "");
-  //         await AsyncStorage.setItem("Disp_name", name || "");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching Customer Info:", error);
-  //     }
-  //   };
-
-  //   fetchCustomerInfo();
-  // }, [route.params]);
 
 
-  
   useEffect(() => {
     const fetchDisplayName = async () => {
       try {
@@ -130,7 +119,6 @@ const HomeScreen: React.FC = () => {
     }
   }, [CustomerID]);
 
-  
   const fetchCategories = useCallback(async () => {
     if (!CustomerID) {
       console.log("CustomerID is not set");
@@ -148,16 +136,16 @@ const HomeScreen: React.FC = () => {
         }
       );
 
-      console.log("Response received:", response.data);
+      // console.log("Response received:", response.data);
 
       if (response.data && response.data.output) {
         const uniqueCategories = response.data.output.reduce(
           (acc: CategoryItem[], current: CategoryItem) => {
             const x = acc.find((item) => item.CATID === current.CATID);
             if (!x) {
-              console.log(
-                `Category: ${current.CATDESC}, CAT_IMGFILE: ${current.CAT_IMGFILE}`
-              );
+              // console.log(
+              //   `Category: ${current.CATDESC}, CAT_IMGFILE: ${current.CAT_IMGFILE}`
+              // );
               return acc.concat([current]);
             } else {
               return acc;
@@ -221,23 +209,23 @@ const HomeScreen: React.FC = () => {
     },
     [categories]
   );
-   
+
   const renderCardItem = useCallback(
     ({ item }: { item: CategoryItem }) => {
       const imageSource = getImage(item.CAT_IMGFILE);
 
-      console.log(
-        "Rendering item:",
-        item.CATDESC,
-        "with image:",
-        item.CAT_IMGFILE
-      );
+      // console.log(
+      //   "Rendering item:",
+      //   item.CATDESC,
+      //   "with image:",
+      //   item.CAT_IMGFILE
+      // );
 
       return (
         <TouchableOpacity
           style={styles.card}
           onPress={() =>
-            navigation.navigate("Category", { category: item.CATDESC })
+            navigation.navigate("Category", { category: item.CATDESC ,categoryId: item.CATID})
           }
         >
           <Image
@@ -264,7 +252,10 @@ const HomeScreen: React.FC = () => {
             source={require("../../assets/New folder/SavlaLogo.png")}
             style={styles.logo}
           />
-          <Text style={styles.headerTitle}>UNICORP ENTERPRISES</Text>
+          <View style={styles.headerTitleContainer}> 
+          <Text style={styles.headerTitle}>{displayName || "Loading..."}</Text>
+          </View>
+           
         </View>
         <View style={styles.headerRightContainer}>
           <TouchableOpacity
@@ -284,9 +275,7 @@ const HomeScreen: React.FC = () => {
         </View>
       </View>
       {/* <Text style={styles.id}>Customer ID: {CustomerID || "Loading..."}</Text> */}
-      <Text style={styles.welcomeText}>
-        {displayName || "Loading..."}
-      </Text>
+     
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -329,44 +318,63 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#fff', 
+    backgroundColor: "#fff",
+    position: 'relative',
+    height: 65, 
   },
   headerRightContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
+    alignItems: "center",
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    transform: [{ translateY: -12 }], // Center vertically
+    minWidth: 80, // Ensure minimum width
+    justifyContent: 'flex-end',
+    gap: 16, // Consistent spacing between icons
+    zIndex: 2, // Ensure it stays above other elements
+  },
+  headerTitleContainer: {
+    position: 'absolute',
+    left: 70, // Adjust based on logo width + padding
+    right: 100, // Space for right container
+    top: 0,
+    bottom: 0,
     alignItems: 'center',
-    marginHorizontal: -40,
+    justifyContent: 'center',
+    zIndex: 1,
   },
   cartButton: {
-    padding: 5,
-    marginRight: -25,
+    padding: 0,
+    // marginRight: 2,
   },
   cartBadge: {
-    position: 'absolute',
+    position: "absolute",
     right: -3,
     top: -6,
-    backgroundColor: 'red',
+    backgroundColor: "red",
     borderRadius: 9,
     width: 18,
     height: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
+
   cartBadgeText: {
-    color: 'white',
+    color: "white",
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
-    marginLeft: -5
+    marginLeft: -2,
   },
   logo: {
     width: 45,
@@ -375,110 +383,107 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    color: '#007BFA',
-    fontWeight: 'bold',
-    marginLeft: 20
+    color: "#007BFA",
+    fontWeight: "bold",
+    marginLeft: 25,
+    textAlign: "center",
+    // alignItems:"center"
   },
   logoutButton: {
-    marginHorizontal: 30,   
+    // marginHorizontal: 30,
+    // padding:5
   },
   searchContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 20,
-    paddingVertical: 15,   
-    marginBottom: -10 
+    paddingVertical: 15,
+    marginBottom: -10,
   },
   searchInput: {
     flex: 1,
     height: 40,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 20,
     paddingHorizontal: 15,
     marginRight: 10,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   searchButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
     width: 40,
     height: 40,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   cardContainer: {
     paddingHorizontal: 10,
     paddingBottom: 10,
+    minHeight:200
   },
   card: {
     width: (width - 40) / 2,
     margin: 5,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 10,
     padding: 8,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
+    minHeight:150,
   },
-  id:{
-    color:'black',
-    fontSize:20,
-    flexDirection: 'row',
-    marginLeft:25
+  id: {
+    color: "black",
+    fontSize: 20,
+    flexDirection: "row",
+    marginLeft: 25,
   },
   cardImage: {
-    width: '100%',
+    width: "100%",
     height: 85,
-    resizeMode: 'cover',
+    resizeMode: "cover",
     borderRadius: 5,
   },
   cardText: {
     marginTop: 5,
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   headingContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop:-110,
     paddingHorizontal: 20,
     paddingVertical: 10,
   },
   headingText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: "bold",     
   },
   moreText: {
     fontSize: 16,
-    color: '#F48221',
-    fontWeight: 'bold',
+    color: "#F48221",
+    fontWeight: "bold",
   },
   bottomTab: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: '#ddd',
-     
+    borderTopColor: "#ddd",
   },
   tabItem: {
-    alignItems: 'center',
+    alignItems: "center",
   },
-  welcomeText: {
-    marginTop: 5,
-    marginLeft: 20,
-    fontSize: 20,
-    fontWeight: "bold",
-    // textAlign:"center",
-    // color:"#F48221"
-  },
+
 });
 
 export default HomeScreen;
-
 
 // src/screens/HomeScreen.js(Demo for image fetching)
 
