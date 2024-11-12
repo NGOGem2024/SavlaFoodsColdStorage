@@ -100,7 +100,6 @@ import OutwardsScreen from './ExtraScreens/OutwardsScreen';
 import ProductSearchScreen from './ExtraScreens/ProductSearchScreen';
 import BottomTabNavigator from './Frontend/Screens/BottomTabs/BottomTabNavigator';
 import CartScreen from './Frontend/Screens/CartScreen';
-import Category from './Frontend/Screens/Category';
 import { CartProvider } from './Frontend/Screens/contexts/CartContext';
 import { DisplayNameProvider } from './Frontend/Screens/contexts/DisplayNameContext';
 import { NotificationProvider } from './Frontend/Screens/contexts/NotificationContext';
@@ -110,6 +109,7 @@ import LotReportScreen from './Frontend/Screens/LotReportScreen';
 import OtpVerification from './Frontend/Screens/OtpVerificationScreen';
 import SplashScreen from './Frontend/Screens/SplashScreen';
 import StocksScreen from './Frontend/Screens/StocksScreen';
+import SubCategory from './Frontend/Screens/SubCategory';
 
 // Define the type for route params
 export type RootStackParamList = {
@@ -127,8 +127,8 @@ export type RootStackParamList = {
   Checkout: undefined;
   OrderPlacementScreen: undefined;
   ProductSearchScreen: undefined;
-  Category:  { category: string; categoryId: string }; 
-  ItemDetailsExpanded:{itemId: number};
+  SubCategory:  { category: string; categoryId: string }; 
+  ItemDetailsExpanded:{ItemID: number};
   CartScreen: undefined;
   LotReportScreen: { item: any };
   Announcement: undefined;
@@ -158,7 +158,7 @@ const MainStackNavigator: React.FC = () => {
       <MainStack.Screen name="Invoices" component={InvoicesScreen} />
       <MainStack.Screen name="ProductSearchScreen" component={ProductSearchScreen} />
       <MainStack.Screen name="OrderPlacementScreen" component={OrderPlacementScreen} />
-      <MainStack.Screen name="Category" component={Category} />
+      <MainStack.Screen name="SubCategory" component={SubCategory} />
       <MainStack.Screen 
         name="ItemDetailScreen" 
         component={ItemDetailScreen}
@@ -169,7 +169,7 @@ const MainStackNavigator: React.FC = () => {
       <MainStack.Screen 
         name="ItemDetailsExpanded" 
         component={ItemDetailsExpanded}
-        options={({ route }) => ({ 
+        options={({ route:ItemId}) => ({ 
           title: 'Item Details'
         })}
       />

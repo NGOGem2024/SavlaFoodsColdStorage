@@ -15,7 +15,7 @@
 //   code: string;
 //   description: string;
 //   name: string;
- 
+
 // }
 
 // // Sample data
@@ -25,35 +25,35 @@
 //     code: 'ITEM001',
 //     description: 'This is a sample item description',
 //     name: 'Sample Item 1',
-     
+
 //   },
 //   {
 //     id: '2',
 //     code: 'ITEM002',
 //     description: 'Another sample item description',
 //     name: 'Sample Item 2',
-     
+
 //   },
 //   {
 //     id: '2',
 //     code: 'ITEM002',
 //     description: 'Another sample item description',
 //     name: 'Sample Item 2',
-     
+
 //   },
 //   {
 //     id: '2',
 //     code: 'ITEM002',
 //     description: 'Another sample item description',
 //     name: 'Sample Item 2',
-     
+
 //   },
 //   {
 //     id: '2',
 //     code: 'ITEM002',
 //     description: 'Another sample item description',
 //     name: 'Sample Item 2',
-     
+
 //   },
 // ];
 
@@ -82,7 +82,6 @@
 //                   <Text style={styles.value}>{item.id}</Text>
 //                 </View>
 
-               
 //               </View>
 
 //               <View style={styles.detailRow}>
@@ -267,15 +266,15 @@
 //   return (
 //     <SafeAreaView style={styles.container}>
 //       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
-      
-//       <ScrollView 
+
+//       <ScrollView
 //         showsVerticalScrollIndicator={false}
 //         contentContainerStyle={styles.scrollContent}
 //       >
 //         {/* Wrapper for centering the image container */}
 //         <View style={styles.centerWrapper}>
 //           {/* Image Container with Animation */}
-//           <Animated.View 
+//           <Animated.View
 //             style={[
 //               styles.imageWrapper,
 //               {
@@ -298,8 +297,8 @@
 //         {/* Cards Container */}
 //         <View style={styles.cardsContainer}>
 //           {sampleItems.map((item, index) => (
-//             <Animated.View 
-//               key={item.id} 
+//             <Animated.View
+//               key={item.id}
 //               style={[
 //                 styles.card,
 //                 {
@@ -430,7 +429,6 @@
 
 // export default ItemDetailScreen;
 
-
 // import { useNavigation } from '@react-navigation/native';
 // import axios from 'axios';
 // import React, { useEffect, useState } from 'react';
@@ -499,7 +497,7 @@
 //       }
 //     } catch (err) {
 //       console.error('Error fetching items:', err);
-      
+
 //       if (axios.isAxiosError(err)) {
 //         if (err.response?.status === 404) {
 //           setError('No items found for this subcategory');
@@ -533,7 +531,7 @@
 
 //   const renderStockInfo = (stock: StockDetail[]) => {
 //     if (!stock || stock.length === 0) return null;
-    
+
 //     return (
 //       <View style={styles.stockContainer}>
 //         {stock.map((stockItem, index) => (
@@ -581,7 +579,7 @@
 //           />
 //         )}
 //       </View>
-      
+
 //       <FlatList
 //         data={items}
 //         renderItem={renderItem}
@@ -594,7 +592,7 @@
 //             <Text style={styles.emptyText}>
 //               {error || 'No items found'}
 //             </Text>
-//             <TouchableOpacity 
+//             <TouchableOpacity
 //               style={styles.retryButton}
 //               onPress={() => fetchItems()}
 //             >
@@ -715,7 +713,6 @@
 
 // export default ItemDetailScreen;
 
-
 // import { RouteProp, useNavigation } from '@react-navigation/native';
 // import axios from 'axios';
 // import React, { useEffect, useState } from 'react';
@@ -758,16 +755,16 @@
 //   const fetchItems = async (showLoader = true) => {
 //     if (showLoader) setLoading(true);
 //     setError(null);
-  
+
 //     try {
 //       // Log the subcategory ID we're trying to fetch
 //       console.log('Attempting to fetch items for subcategory ID:', route.params.subcategoryId);
-      
+
 //       // Create the request payload
 //       const payload = {
 //         SubCategoryID: route.params.subcategoryId // Send as is, without Number()
 //       };
-      
+
 //       console.log('Request payload:', JSON.stringify(payload, null, 2));
 
 //       const response = await axios.post(
@@ -781,7 +778,7 @@
 //           timeout: 10000 // 10 second timeout
 //         }
 //       );
-      
+
 //       console.log('Response status:', response.status);
 //       console.log('Response data:', JSON.stringify(response.data, null, 2));
 
@@ -803,7 +800,7 @@
 //         console.error('Request Data:', err.config?.data);
 //         console.error('Response Status:', err.response?.status);
 //         console.error('Response Data:', err.response?.data);
-        
+
 //         const errorMessage = err.response?.data?.message || err.message;
 //         setError(`Error: ${errorMessage}`);
 //       } else {
@@ -834,7 +831,7 @@
 //   };
 
 //   const renderItem = ({ item }: { item: Item }) => (
-//     <TouchableOpacity 
+//     <TouchableOpacity
 //       style={styles.itemCard}
 //       onPress={() => {
 //         // Handle item selection if needed
@@ -870,7 +867,7 @@
 //           />
 //         )}
 //       </View>
-      
+
 //       <FlatList
 //         data={items}
 //         renderItem={renderItem}
@@ -883,7 +880,7 @@
 //             <Text style={styles.emptyText}>
 //               {error || 'No items found'}
 //             </Text>
-//             <TouchableOpacity 
+//             <TouchableOpacity
 //               style={styles.retryButton}
 //               onPress={() => fetchItems()}
 //             >
@@ -896,8 +893,6 @@
 //     </View>
 //   );
 // };
-
-
 
 // const styles = StyleSheet.create({
 //   container: {
@@ -1032,14 +1027,14 @@
 //   const fetchItems = async (showLoader = true) => {
 //     if (showLoader) setLoading(true);
 //     setError(null);
-  
+
 //     try {
 //       console.log('Attempting to fetch items for subcategory ID:', route.params.subcategoryId);
-      
+
 //       const payload = {
 //         SubCategoryID: route.params.subcategoryId
 //       };
-      
+
 //       const response = await axios.post(
 //         `${BACKEND_URL}/getItemsBySubCategory`,
 //         payload,
@@ -1088,7 +1083,7 @@
 
 //   const renderItem = ({ item, index }: { item: Item; index: number }) => {
 //     const scaleAnim = new Animated.Value(1);
-    
+
 //     const onPressIn = () => {
 //       Animated.spring(scaleAnim, {
 //         toValue: 0.95,
@@ -1112,7 +1107,7 @@
 //           },
 //         ]}
 //       >
-//         <TouchableOpacity 
+//         <TouchableOpacity
 //           onPressIn={onPressIn}
 //           onPressOut={onPressOut}
 //           activeOpacity={1}
@@ -1127,20 +1122,20 @@
 //                 <Text style={styles.quantityValue}>{item.BALANCE_QTY_SUM}</Text>
 //               </View>
 //             </View>
-            
+
 //             <View style={styles.itemRightSection}>
-//               <TouchableOpacity 
+//               <TouchableOpacity
 //                 style={styles.cartIcon}
 //                 onPress={() => {
 //                   // Handle add to cart
 //                   console.log('Add to cart:', item.ITEM_ID);
 //                 }}
 //               >
-                
+
 //                 <Text style={styles.cartIconText}>🛒</Text>
 //                 {/* <Text style={styles.cartIconText}>Add</Text> */}
 //               </TouchableOpacity>
-// {/*               
+// {/*
 //               <View style={styles.quantityContainer}>
 //                 <Text style={styles.quantityLabel}>Balance. Qty</Text>
 //                 <Text style={styles.quantityValue}>{item.BALANCE_QTY_SUM}</Text>
@@ -1179,7 +1174,7 @@
 //           />
 //         )}
 //       </View>
-      
+
 //       <FlatList
 //         data={items}
 //         renderItem={renderItem}
@@ -1192,7 +1187,7 @@
 //             <Text style={styles.emptyText}>
 //               {error || 'No items found'}
 //             </Text>
-//             <TouchableOpacity 
+//             <TouchableOpacity
 //               style={styles.retryButton}
 //               onPress={() => fetchItems()}
 //             >
@@ -1261,14 +1256,14 @@
 //   const fetchItems = async (showLoader = true) => {
 //     if (showLoader) setLoading(true);
 //     setError(null);
-  
+
 //     try {
 //       console.log('Attempting to fetch items for subcategory ID:', route.params.subcategoryId);
-      
+
 //       const payload = {
 //         SubCategoryID: route.params.subcategoryId
 //       };
-      
+
 //       const response = await axios.post(
 //         `${BACKEND_URL}/getItemsBySubCategory`,
 //         payload,
@@ -1336,7 +1331,7 @@
 
 //   const renderItem = ({ item, index }: { item: Item; index: number }) => {
 //     const scaleAnim = new Animated.Value(1);
-    
+
 //     const onPressIn = () => {
 //       Animated.spring(scaleAnim, {
 //         toValue: 0.95,
@@ -1365,7 +1360,7 @@
 //           },
 //         ]}
 //       >
-//         <TouchableOpacity 
+//         <TouchableOpacity
 //           onPressIn={onPressIn}
 //           onPressOut={onPressOut}
 //           activeOpacity={1}
@@ -1381,7 +1376,7 @@
 //             </View>
 //           </View>
 
-//           <Animated.View 
+//           <Animated.View
 //             style={[
 //               styles.addToCartContainer,
 //               {
@@ -1389,7 +1384,7 @@
 //               }
 //             ]}
 //           >
-//             <TouchableOpacity 
+//             <TouchableOpacity
 //               style={styles.addToCartButton}
 //               onPress={() => handleAddToCart(item.ITEM_ID)}
 //             >
@@ -1431,7 +1426,7 @@
 //           />
 //         )}
 //       </View>
-      
+
 //       <FlatList
 //         data={items}
 //         renderItem={renderItem}
@@ -1444,7 +1439,7 @@
 //             <Text style={styles.emptyText}>
 //               {error || 'No items found'}
 //             </Text>
-//             <TouchableOpacity 
+//             <TouchableOpacity
 //               style={styles.retryButton}
 //               onPress={() => fetchItems()}
 //             >
@@ -1530,7 +1525,7 @@
 //     color: '#2c3e50',
 //     marginBottom: 8,
 //   },
-//   itemCode: { 
+//   itemCode: {
 //     fontSize: 14,
 //     color: '#7f8c8d',
 //     marginBottom: 4,
@@ -1574,7 +1569,7 @@
 //   cartIconWrapper: {
 //     marginRight: 8,
 //   },
-  
+
 //   addToCartText: {
 //     color: '#ffffff',
 //     fontSize: 14,
@@ -1685,14 +1680,14 @@
 //   const fetchItems = async (showLoader = true) => {
 //     if (showLoader) setLoading(true);
 //     setError(null);
-  
+
 //     try {
 //       console.log('Attempting to fetch items for subcategory ID:', route.params.subcategoryId);
-      
+
 //       const payload = {
 //         SubCategoryID: route.params.subcategoryId
 //       };
-      
+
 //       const response = await axios.post(
 //         `${BACKEND_URL}/getItemsBySubCategory`,
 //         payload,
@@ -1760,7 +1755,7 @@
 
 //   const renderItem = ({ item, index }: { item: Item; index: number }) => {
 //     const scaleAnim = new Animated.Value(1);
-    
+
 //     const onPressIn = () => {
 //       Animated.spring(scaleAnim, {
 //         toValue: 0.95,
@@ -1789,7 +1784,7 @@
 //           },
 //         ]}
 //       >
-//         <TouchableOpacity 
+//         <TouchableOpacity
 //           onPressIn={onPressIn}
 //           onPressOut={onPressOut}
 //           activeOpacity={1}
@@ -1805,7 +1800,7 @@
 //             </View>
 //           </View>
 
-//           <Animated.View 
+//           <Animated.View
 //             style={[
 //               styles.addToCartContainer,
 //               {
@@ -1813,7 +1808,7 @@
 //               }
 //             ]}
 //           >
-//             <TouchableOpacity 
+//             <TouchableOpacity
 //               style={styles.addToCartButton}
 //               onPress={() => handleAddToCart(item.ITEM_ID)}
 //             >
@@ -1855,7 +1850,7 @@
 //           />
 //         )}
 //       </View>
-      
+
 //       <FlatList
 //         data={items}
 //         renderItem={renderItem}
@@ -1868,7 +1863,7 @@
 //             <Text style={styles.emptyText}>
 //               {error || 'No items found'}
 //             </Text>
-//             <TouchableOpacity 
+//             <TouchableOpacity
 //               style={styles.retryButton}
 //               onPress={() => fetchItems()}
 //             >
@@ -2038,9 +2033,9 @@
 
 // export default ItemDetailScreen;
 
-import { NavigationProp, RouteProp } from '@react-navigation/native';
-import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import { NavigationProp, RouteProp } from "@react-navigation/native";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -2048,17 +2043,19 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Modal,
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
-  View
-} from 'react-native';
-import { RootStackParamList } from '../../App';
-import { getImage } from '../utils/imageLoader';
+  View,
+} from "react-native";
+import { RootStackParamList } from "../../App";
+import { getImage } from "../utils/imageLoader";
 
 const BACKEND_URL = "http://192.168.1.3:3000/sf";
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 interface Item {
   ITEM_ID: number;
@@ -2068,26 +2065,35 @@ interface Item {
   BALANCE_QTY_SUM: number;
 }
 
-type ItemDetailScreenRouteProp = RouteProp<RootStackParamList, 'ItemDetailScreen'>;
+type ItemDetailScreenRouteProp = RouteProp<
+  RootStackParamList,
+  "ItemDetailScreen"
+>;
 type ItemDetailScreenNavigationProp = NavigationProp<RootStackParamList>;
 
 interface ItemDetailScreenProps {
   route: ItemDetailScreenRouteProp;
-  navigation:ItemDetailScreenNavigationProp;
+  navigation: ItemDetailScreenNavigationProp;
 }
 
-const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({ route ,navigation}) => {
+const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({
+  route,
+  navigation,
+}) => {
   // const navigation = useNavigation();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cartAnimations, setCartAnimations] = useState<{ [key: number]: Animated.Value }>({});
+  const [cartAnimations, setCartAnimations] = useState<{
+    [key: number]: Animated.Value;
+  }>({});
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [quantity, setQuantity] = useState("");
 
-  // Initialize cart animations for each item
   useEffect(() => {
     const animations: { [key: number]: Animated.Value } = {};
-    items.forEach(item => {
+    items.forEach((item) => {
       animations[item.ITEM_ID] = new Animated.Value(0);
     });
     setCartAnimations(animations);
@@ -2096,31 +2102,33 @@ const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({ route ,navigation})
   const fetchItems = async (showLoader = true) => {
     if (showLoader) setLoading(true);
     setError(null);
-  
+
     try {
-      console.log('Attempting to fetch items for subcategory ID:', route.params.subcategoryId);
-      // console.log('Attempting to fetch items for subcategory ID:', route.params.ITEM_ID);
-      
+      console.log(
+        "Attempting to fetch items for subcategory ID:",
+        route.params.subcategoryId
+      );
+
       const payload = {
-        SubCategoryID: route.params.subcategoryId
+        SubCategoryID: route.params.subcategoryId,
       };
-      
+
       const response = await axios.post(
         `${BACKEND_URL}/getItemsBySubCategory`,
         payload,
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            "Content-Type": "application/json",
+            Accept: "application/json",
           },
-          timeout: 10000
+          timeout: 10000,
         }
       );
 
       if (response.data?.output?.items) {
         setItems(response.data.output.items);
       } else {
-        setError('No items available');
+        setError("No items available");
         setItems([]);
       }
     } catch (err) {
@@ -2128,7 +2136,7 @@ const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({ route ,navigation})
         const errorMessage = err.response?.data?.message || err.message;
         setError(`Error: ${errorMessage}`);
       } else {
-        setError('Unexpected error occurred');
+        setError("Unexpected error occurred");
       }
       setItems([]);
     } finally {
@@ -2139,7 +2147,7 @@ const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({ route ,navigation})
 
   useEffect(() => {
     if (!route.params?.subcategoryId) {
-      setError('Invalid subcategory ID');
+      setError("Invalid subcategory ID");
       setLoading(false);
       return;
     }
@@ -2151,66 +2159,54 @@ const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({ route ,navigation})
     fetchItems(false);
   };
 
-  const handleAddToCart = (itemId: number) => {
+  const handleAddToCart = (ItemId: number) => {
     // Trigger the add to cart animation
     Animated.sequence([
-      Animated.timing(cartAnimations[itemId], {
+      Animated.timing(cartAnimations[ItemId], {
         toValue: 1,
         duration: 200,
         useNativeDriver: true,
       }),
-      Animated.timing(cartAnimations[itemId], {
+      Animated.timing(cartAnimations[ItemId], {
         toValue: 0,
         duration: 200,
         useNativeDriver: true,
-      })
+      }),
     ]).start();
 
     // Handle add to cart logic here
-    console.log('Add to cart:', itemId);
+    setModalVisible(true);
+    console.log("Add to cart:", ItemId);
+  };
+  const handleConfirmQuantity = () => {
+    // Handle the quantity logic here, like updating cart with quantity
+    console.log("Item added to cart with quantity:", quantity);
+
+    // Close the modal
+    setModalVisible(false);
+    setQuantity(""); // Reset quantity after adding to cart
+  };
+  const handleViewDetails = (item: Item) => {
+    if (!item.ITEM_ID) {
+      console.error("Invalid ItemId:", item.ITEM_ID);
+      Alert.alert("Error", "Invalid item ID");
+      return;
+    }
+
+    console.log("Navigating to details for item ID:", item.ITEM_ID);
+
+    navigation.navigate("ItemDetailsExpanded", {
+      ItemID: item.ITEM_ID, // Change to match backend's expected format
+    });
   };
 
-    // const handleViewDetails = (itemId: number) => {
-    // console.log('Navigating to details for item ID:', itemId);
-    // // Properly typed navigation
-    // navigation.navigate('ItemDetailsExpanded', {
-    //   itemId: itemId
-    // });
-
-    const handleViewDetails = (itemId: number) => {
-      if (!itemId) {
-        console.error('Invalid itemId:', itemId);
-        Alert.alert('Error', 'Invalid item ID');
-        return;
-      }
-      
-      console.log('Navigating to details for item ID:', itemId);
-      navigation.navigate('ItemDetailsExpanded', {
-        itemId: itemId
-      });
-    };
-    
   const renderItem = ({ item, index }: { item: Item; index: number }) => {
     const scaleAnim = new Animated.Value(1);
-    
-    const onPressIn = () => {
-      Animated.spring(scaleAnim, {
-        toValue: 0.95,
-        useNativeDriver: true,
-      }).start();
-    };
-
-    const onPressOut = () => {
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-      }).start();
-    };
-
-    const cartButtonScale = cartAnimations[item.ITEM_ID]?.interpolate({
-      inputRange: [0, 0.5, 1],
-      outputRange: [1, 1.2, 1]
-    }) || new Animated.Value(1);
+    const cartButtonScale =
+      cartAnimations[item.ITEM_ID]?.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [1, 1.2, 1],
+      }) || new Animated.Value(1);
 
     return (
       <Animated.View
@@ -2221,11 +2217,10 @@ const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({ route ,navigation})
           },
         ]}
       >
-        <TouchableOpacity 
-          onPressIn={onPressIn}
-          onPressOut={onPressOut}
-          activeOpacity={1}
-          onPress={() => handleViewDetails(item.ITEM_ID)}
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("ItemDetailsExpanded", { ItemID: 1 })
+          }
         >
           <View style={styles.itemContent}>
             <View style={styles.itemMainInfo}>
@@ -2235,26 +2230,26 @@ const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({ route ,navigation})
                 <Text style={styles.quantityLabel}>Balance Quantity : </Text>
                 <Text style={styles.quantityValue}>{item.BALANCE_QTY_SUM}</Text>
               </View>
-              
+
               {/* New View Details Button */}
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.viewDetailsButton}
-                onPress={() => handleViewDetails(item.ITEM_ID)}
+                onPress={() => handleViewDetails(item)}
               >
                 <Text style={styles.viewDetailsText}>View Details</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          <Animated.View 
+          <Animated.View
             style={[
               styles.addToCartContainer,
               {
-                transform: [{ scale: cartButtonScale }]
-              }
+                transform: [{ scale: cartButtonScale }],
+              },
             ]}
           >
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.addToCartButton}
               onPress={() => handleAddToCart(item.ITEM_ID)}
             >
@@ -2263,6 +2258,30 @@ const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({ route ,navigation})
               </View>
               <Text style={styles.addToCartText}>Add</Text>
             </TouchableOpacity>
+            <Modal
+              transparent={true}
+              visible={isModalVisible}
+              onRequestClose={() => setModalVisible(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Enter Quantity</Text>
+                  <TextInput
+                    style={styles.quantityInput}
+                    placeholder="Enter quantity"
+                    keyboardType="numeric"
+                    value={quantity}
+                    onChangeText={setQuantity}
+                  />
+                  <TouchableOpacity
+                    style={styles.confirmButton}
+                    onPress={handleConfirmQuantity}
+                  >
+                    <Text style={styles.confirmButtonText}>Add Quantity</Text>
+                  </TouchableOpacity>
+                </View> 
+              </View>
+            </Modal>
           </Animated.View>
         </TouchableOpacity>
       </Animated.View>
@@ -2281,12 +2300,7 @@ const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({ route ,navigation})
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.headerText}>
-            {route.params.subcategoryName}
-          </Text>
-          <Text style={styles.subHeaderText}>
-            ID: {route.params.subcategoryId}
-          </Text>
+          <Text style={styles.headerText}>{route.params.subcategoryName}</Text>
         </View>
         {route.params.subcatImgFile && (
           <Image
@@ -2296,7 +2310,7 @@ const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({ route ,navigation})
           />
         )}
       </View>
-      
+
       <FlatList
         data={items}
         renderItem={renderItem}
@@ -2306,10 +2320,8 @@ const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({ route ,navigation})
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
-              {error || 'No items found'}
-            </Text>
-            <TouchableOpacity 
+            <Text style={styles.emptyText}>{error || "No items found"}</Text>
+            <TouchableOpacity
               style={styles.retryButton}
               onPress={() => fetchItems()}
             >
@@ -2325,35 +2337,35 @@ const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({ route ,navigation})
 
 const styles = StyleSheet.create({
   // ... existing styles ...
-  
+
   viewDetailsButton: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: "#e3f2fd",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
     marginTop: 8,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     borderWidth: 1,
-    borderColor: '#2196f3',
+    borderColor: "#2196f3",
   },
   viewDetailsText: {
-    color: '#2196f3',
+    color: "#2196f3",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
   },
   header: {
-    backgroundColor: '#ffffff',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: "#ffffff",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderBottomColor: '#e1e1e1',
+    borderBottomColor: "#e1e1e1",
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -2364,38 +2376,38 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2c3e50',
+    fontWeight: "bold",
+    color: "#2c3e50",
     marginBottom: 4,
     marginLeft: 25,
   },
   subHeaderText: {
     fontSize: 14,
-    color: '#7f8c8d',
+    color: "#7f8c8d",
     marginLeft: 25,
   },
   headerImage: {
     width: 100,
     height: 100,
     borderRadius: 8,
-    marginRight: 10
+    marginRight: 10,
   },
   itemCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 12,
     marginHorizontal: 16,
     marginVertical: 8,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   itemContent: {
     padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   itemMainInfo: {
     flex: 1,
@@ -2403,36 +2415,36 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2c3e50',
+    fontWeight: "bold",
+    color: "#2c3e50",
     marginBottom: 8,
   },
   description: {
     fontSize: 14,
-    color: '#34495e',
+    color: "#34495e",
     marginBottom: 8,
   },
   addToCartContainer: {
     padding: 12,
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     right: 0,
   },
   addToCartButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFDD0',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFDD0",
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: 25,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
   },
   cartIconWrapper: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderRadius: 20,
     padding: 4,
     marginRight: 8,
@@ -2441,55 +2453,89 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   addToCartText: {
-    color: '#F48221',
+    color: "#F48221",
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
     marginLeft: -4,
   },
   quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   quantityLabel: {
     fontSize: 16,
-    color: 'black',
+    color: "black",
     marginBottom: 2,
   },
   quantityValue: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#27ae60',
+    fontWeight: "bold",
+    color: "#27ae60",
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginBottom: 16,
   },
   retryButton: {
     padding: 12,
-    backgroundColor: '#3498db',
+    backgroundColor: "#3498db",
     borderRadius: 8,
   },
   retryButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   listContainer: {
     flexGrow: 1,
     paddingVertical: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    marginBottom: 15,
+  },
+  quantityInput: {
+    width: "100%",
+    padding: 10,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 20,
+  },
+  confirmButton: {
+    backgroundColor: "#28a745",
+    padding: 10,
+    borderRadius: 5,
+  },
+  confirmButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
 });
 

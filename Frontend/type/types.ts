@@ -19,6 +19,9 @@ export type RootStackParamList = {
     Announcement:undefined;
     BottomTabNavigator:undefined;
     Main:undefined;
+    ItemDetailsExpanded:{
+      ItemID:number;
+    },
     ItemDetailScreen: {
       subcategoryId: string;
       subcategoryName: string;

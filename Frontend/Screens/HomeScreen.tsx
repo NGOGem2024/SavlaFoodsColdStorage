@@ -71,7 +71,6 @@
 //   const { cart } = useCart();
 //   const cartItemCount = cart.length;
 
-
 //   useEffect(() => {
 //     const fetchDisplayName = async () => {
 //       try {
@@ -252,10 +251,10 @@
 //             source={require("../../assets/New folder/SavlaLogo.png")}
 //             style={styles.logo}
 //           />
-//           <View style={styles.headerTitleContainer}> 
+//           <View style={styles.headerTitleContainer}>
 //           <Text style={styles.headerTitle}>{displayName || "Loading..."}</Text>
 //           </View>
-           
+
 //         </View>
 //         <View style={styles.headerRightContainer}>
 //           <TouchableOpacity
@@ -275,7 +274,7 @@
 //         </View>
 //       </View>
 //       {/* <Text style={styles.id}>Customer ID: {CustomerID || "Loading..."}</Text> */}
-     
+
 //       <View style={styles.searchContainer}>
 //         <TextInput
 //           style={styles.searchInput}
@@ -325,7 +324,7 @@
 //     paddingVertical: 10,
 //     backgroundColor: "#fff",
 //     position: 'relative',
-//     height: 65, 
+//     height: 65,
 //   },
 //   headerRightContainer: {
 //     flexDirection: "row",
@@ -462,7 +461,7 @@
 //   },
 //   headingText: {
 //     fontSize: 22,
-//     fontWeight: "bold",     
+//     fontWeight: "bold",
 //   },
 //   moreText: {
 //     fontSize: 16,
@@ -551,7 +550,9 @@ const HomeScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { displayName, setDisplayName } = useDisplayName();
   const [categories, setCategories] = useState<CategoryItem[]>([]);
-  const [filteredCategories, setFilteredCategories] = useState<CategoryItem[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<CategoryItem[]>(
+    []
+  );
   const [showAllCards, setShowAllCards] = useState(false);
   const { cart } = useCart();
   const cartItemCount = cart.length;
@@ -682,7 +683,7 @@ const HomeScreen: React.FC = () => {
         <TouchableOpacity
           style={styles.card}
           onPress={() =>
-            navigation.navigate("Category", {
+            navigation.navigate("SubCategory", {
               category: item.CATDESC,
               categoryId: item.CATID,
             })
@@ -707,7 +708,7 @@ const HomeScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#ddd" />
       <Header displayName={displayName} cartItemCount={cartItemCount} />
-      
+
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -801,7 +802,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 14,
     fontWeight: "bold",
-    textAlign:'center'
+    textAlign: "center",
   },
   headingContainer: {
     flexDirection: "row",
@@ -809,7 +810,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 10,
-    marginTop:0
+    marginTop: 0,
   },
   headingText: {
     fontSize: 22,

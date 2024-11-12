@@ -1026,6 +1026,7 @@ const Category: React.FC = () => {
   const fetchSubCategories = useCallback(async () => {
     if (!CustomerID || !selectedCategory) {
       console.log("Waiting for CustomerID or selected category...");
+      
       return;
     }
 
@@ -1043,7 +1044,7 @@ const Category: React.FC = () => {
         }
       );
 
-      console.log("Response received:", response.data);
+      // console.log("Response received:", response.data);
 
       if (response.data && response.data.output) {
         // Filter subcategories based on the selected category
@@ -1066,7 +1067,7 @@ const Category: React.FC = () => {
 
         const uniqueSubCategories = Array.from(uniqueMap.values());
         setSubCategories(uniqueSubCategories);
-        console.log("Filtered subcategories set:", uniqueSubCategories);
+        // console.log("Filtered subcategories set:", uniqueSubCategories);
       } else {
         setError('No data received from server');
       }
@@ -1121,7 +1122,7 @@ const Category: React.FC = () => {
   const renderSubCategoryItem = useCallback(({ item }: { item: SubCategoryItem }) => {
     const imageSource = getImage(item.SUBCAT_IMGFILE);
     
-    console.log("Rendering item:", item.SUBCATDESC, "with image:", item.SUBCAT_IMGFILE);
+    // console.log("Rendering item:", item.SUBCATDESC, "with image:", item.SUBCAT_IMGFILE);
     
     return (
     
