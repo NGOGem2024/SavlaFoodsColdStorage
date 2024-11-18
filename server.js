@@ -2,16 +2,21 @@
   const authRoutes = require('./routes/auth');
   const db = require('./config/database');
   const cors = require('cors');
+  //const dbConfig = require('./config/dbconfig');
+
+  const imageRoutes = require('./routes/imageRoutes');
 
 
   require('dotenv').config();
-
+  // app.use('/', imageRoutes);
   const app = express();
   const PORT = process.env.PORT || 3000;
 
   app.use(express.json());
   app.use(cors());
   app.use('/sf', authRoutes);
+  app.use('/api', imageRoutes);
+  // app.use('/', imageRoutes);
 
  db.initialize()
   .then(() => {

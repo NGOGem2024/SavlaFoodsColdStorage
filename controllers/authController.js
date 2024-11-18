@@ -71,81 +71,160 @@ const authController = {
       });
     }
   },
-   async getItemCatSubCat  (req, res) {
-    const { CustomerID } = req.body;
-    const { displayName } = req.user; // Get displayName from the authenticated user
+  //  async getItemCatSubCat  (req, res) {
+  //   const { CustomerID } = req.body;
+  //   const { displayName } = req.user; // Get displayName from the authenticated user
     
-    if (!CustomerID) {
-      return res.status(400).json({ 
-        message: 'CustomerID is required'
-      });
-    }
+  //   if (!CustomerID) {
+  //     return res.status(400).json({ 
+  //       message: 'CustomerID is required'
+  //     });
+  //   }
   
-    try {
+  //   try {
+  //     // First verify if the customer exists
+  //     const customerCheck = await db.execute(
+  //       `SELECT CL.FK_CUSTOMER_ID 
+  //        FROM CUSTOMER_LOGIN CL
+  //        JOIN CUSTOMER C ON CL.FK_CUSTOMER_ID = C.CUSTOMER_ID
+  //        WHERE CL.FK_CUSTOMER_ID = :CustomerID`,
+  //       { CustomerID },
+  //       { outFormat: oracledb.OUT_FORMAT_OBJECT }
+  //     );
+  
+  //     if (customerCheck.rows.length === 0) {
+  //       return res.status(404).json({ 
+  //         message: 'Customer not found',
+  //         debug: `No customer found with ID: ${CustomerID}`
+  //       });
+  //     }
+  
+  //     // Get categories and subcategories for the specific customer
+  //     const result = await db.execute(
+  //       `SELECT 
+  //         ICS.ITEM_CATEG_ID AS CATID,
+  //         ICS.ITEM_CATEG_CODE AS CATCODE,
+  //         ICS.ITEM_CATEG_NAME AS CATDESC,
+  //         ICS.ITEM_SUB_CATEGORY_ID AS SUBCATID,
+  //         ICS.SUB_CATEGORY_CODE AS SUBCATCODE,
+  //         ICS.SUB_CATEGORY_NAME AS SUBCATDESC,          
+  //         CONCAT('C', ICS.ITEM_CATEG_ID, '.jpg') AS CATEGORY_IMAGE_NAME,
+  //         CONCAT('SC', ICS.ITEM_SUB_CATEGORY_ID, '.jpg') AS SUBCATEGORY_IMAGE_NAME
+  //       FROM 
+  //         ITEMCAT_SUBCAT ICS
+  //       INNER JOIN 
+  //         CUSTOMER_LOGIN CL ON ICS.FK_CUSTOMER_ID = CL.FK_CUSTOMER_ID
+  //       WHERE 
+  //         CL.FK_CUSTOMER_ID = :CustomerID
+  //       ORDER BY 
+  //         ICS.ITEM_CATEG_ID, 
+  //         ICS.ITEM_SUB_CATEGORY_ID`,
+  //       { CustomerID },
+  //       { outFormat: oracledb.OUT_FORMAT_OBJECT }
+  //     );
+  
+  //     if (result.rows && result.rows.length > 0) {
+
+  //       const transformedRows = result.rows.map(row => ({
+  //         ...row,
+  //         categoryImage: `C${row.CATID}.jpg`,
+  //         subcategoryImage: `SC${row.SUBCATID}.jpg`
+  //       }));
+        
+  //       res.json({
+  //         input: { 
+  //           CustomerID, 
+  //           displayName 
+  //         },
+  //         output: result.rows
+  //       });
+  //     } else {
+  //       res.status(404).json({ 
+  //         message: 'No item categories or subcategories found for this customer',
+  //         debug: `No data found for CustomerID: ${CustomerID}`
+  //       });
+  //     }
+  
+  //   } catch (error) {
+  //     console.error('Database error:', error);
+  //     res.status(500).json({ 
+  //       message: 'Server error',
+  //       debug: error.message 
+  //     });
+  //   }
+  // },
+
+  
+async getItemCatSubCat(req, res) {
+  const { CustomerID } = req.body;
+  const { displayName } = req.user;
+  
+  if (!CustomerID) {
+      return res.status(400).json({ message: 'CustomerID is required' });
+  }
+
+  try {
       // First verify if the customer exists
       const customerCheck = await db.execute(
-        `SELECT CL.FK_CUSTOMER_ID 
-         FROM CUSTOMER_LOGIN CL
-         JOIN CUSTOMER C ON CL.FK_CUSTOMER_ID = C.CUSTOMER_ID
-         WHERE CL.FK_CUSTOMER_ID = :CustomerID`,
-        { CustomerID },
-        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+          `SELECT CL.FK_CUSTOMER_ID 
+           FROM CUSTOMER_LOGIN CL
+           JOIN CUSTOMER C ON CL.FK_CUSTOMER_ID = C.CUSTOMER_ID
+           WHERE CL.FK_CUSTOMER_ID = :1`,
+          [CustomerID],  // Use array for binding parameters
+          { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-  
+
       if (customerCheck.rows.length === 0) {
-        return res.status(404).json({ 
-          message: 'Customer not found',
-          debug: `No customer found with ID: ${CustomerID}`
-        });
+          return res.status(404).json({ 
+              message: 'Customer not found',
+              debug: `No customer found with ID: ${CustomerID}`
+          });
       }
-  
-      // Get categories and subcategories for the specific customer
+
+      // Get categories and subcategories
       const result = await db.execute(
-        `SELECT 
-          ICS.ITEM_CATEG_ID AS CATID,
-          ICS.ITEM_CATEG_CODE AS CATCODE,
-          ICS.ITEM_CATEG_NAME AS CATDESC,
-          ICS.ITEM_SUB_CATEGORY_ID AS SUBCATID,
-          ICS.SUB_CATEGORY_CODE AS SUBCATCODE,
-          ICS.SUB_CATEGORY_NAME AS SUBCATDESC,
-          ICS.CAT_IMGFILE,
-          ICS.SUBCAT_IMGFILE
-        FROM 
-          ITEMCAT_SUBCAT ICS
-        INNER JOIN 
-          CUSTOMER_LOGIN CL ON ICS.FK_CUSTOMER_ID = CL.FK_CUSTOMER_ID
-        WHERE 
-          CL.FK_CUSTOMER_ID = :CustomerID
-        ORDER BY 
-          ICS.ITEM_CATEG_ID, 
-          ICS.ITEM_SUB_CATEGORY_ID`,
-        { CustomerID },
-        { outFormat: oracledb.OUT_FORMAT_OBJECT }
+          `SELECT 
+              ICS.ITEM_CATEG_ID AS CATID,
+              ICS.ITEM_CATEG_CODE AS CATCODE,
+              ICS.ITEM_CATEG_NAME AS CATDESC,
+              ICS.ITEM_SUB_CATEGORY_ID AS SUBCATID,
+              ICS.SUB_CATEGORY_CODE AS SUBCATCODE,
+              ICS.SUB_CATEGORY_NAME AS SUBCATDESC,          
+              'C' || ICS.ITEM_CATEG_ID || '.jpg' AS CATEGORY_IMAGE_NAME,
+              'SC' || ICS.ITEM_SUB_CATEGORY_ID || '.jpg' AS SUBCATEGORY_IMAGE_NAME
+          FROM 
+              ITEMCAT_SUBCAT ICS
+          INNER JOIN 
+              CUSTOMER_LOGIN CL ON ICS.FK_CUSTOMER_ID = CL.FK_CUSTOMER_ID
+          WHERE 
+              CL.FK_CUSTOMER_ID = :1
+          ORDER BY 
+              ICS.ITEM_CATEG_ID, 
+              ICS.ITEM_SUB_CATEGORY_ID`,
+          [CustomerID],  // Use array for binding parameters
+          { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-  
+
       if (result.rows && result.rows.length > 0) {
-        res.json({
-          input: { 
-            CustomerID, 
-            displayName 
-          },
-          output: result.rows
-        });
+          res.json({
+              input: { CustomerID, displayName },
+              output: result.rows
+          });
       } else {
-        res.status(404).json({ 
-          message: 'No item categories or subcategories found for this customer',
-          debug: `No data found for CustomerID: ${CustomerID}`
-        });
+          res.status(404).json({ 
+              message: 'No categories found',
+              debug: `No data found for CustomerID: ${CustomerID}`
+          });
       }
-  
-    } catch (error) {
+
+  } catch (error) {
       console.error('Database error:', error);
       res.status(500).json({ 
-        message: 'Server error',
-        debug: error.message 
+          message: 'Server error',
+          debug: error.message 
       });
-    }
-  },
+  }
+},
 
 
   getItemsBySubCategory: async (req, res) => {
