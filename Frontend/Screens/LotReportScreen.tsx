@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { RouteProp } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const outwardData = [
   { outNo: 'DC103524', date: '01/12/2021', vehicle: 'MH 17 AG 6604', deliveredTo: 'F-28', qty: 1 },
@@ -12,7 +12,7 @@ const outwardData = [
 ];
 
 type RootStackParamList = {
-    LotReportScreen: { item: any };
+    LotReportScreen: undefined;
   };
   
   type LotReportRouteProp = RouteProp<RootStackParamList, 'LotReportScreen'>;

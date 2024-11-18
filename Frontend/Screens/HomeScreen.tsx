@@ -484,6 +484,10 @@
 
 // export default HomeScreen;
 
+
+
+
+
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -495,7 +499,6 @@ import {
 import axios from "axios";
 import { default as React, useCallback, useEffect, useState } from "react";
 import {
-  Alert,
   Dimensions,
   FlatList,
   Image,
@@ -505,30 +508,19 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { RootStackParamList } from "../../App";
-import { getImage } from "../utils/imageLoader";
+
+import { fetchImageMappings, formatImageName, getCategoryImage, ImageMapping } from '../utils/imageRegistry';
 import Carousel from "./Carousel";
 import Header from "./Header"; // Update path as needed
 import { useCart } from "./contexts/CartContext";
 import { useDisplayName } from "./contexts/DisplayNameContext";
 
-const BACKEND_URL = "http://192.168.1.3:3000";
 
-// type RootStackParamList = {
-//   Stocks: undefined;
-//   Inwards: undefined;
-//   Outwards: undefined;
-//   ExpiringProducts: undefined;
-//   Invoices: undefined;
-//   OrderPlacement: undefined;
-//   ProductSearch: undefined;
-//   HomeScreen: { customerID?: string };
-//   OtpVerificationScreen: undefined;
-//   Category: { category: string; categoryId: string };
-//   CartScreen: undefined;
-// };
+
+const BACKEND_URL = "http://192.168.1.3:3000";
 
 type HomeScreenRouteProp = RouteProp<RootStackParamList, "HomeScreen">;
 type HomeScreenNavigationProp = NavigationProp<RootStackParamList>;
@@ -538,10 +530,21 @@ type CategoryItem = {
   CATID: string;
   CATCODE: string;
   CATDESC: string;
-  CAT_IMGFILE: string;
+  // CAT_IMGFILE: string;
+  categoryImage: string;    // Will contain "C{CATID}.jpg"
+  subcategoryImage: string; // Will contain "SC{SUBCATID}.jpg"
 };
 
 const { width } = Dimensions.get("window");
+const BASE_IMAGE_PATH = 'http://192.168.1.3:3000/assets/images'; // Adjust this to your image server path
+// const imageService = ImageService.getInstance();
+
+
+export const getImagePath = (imageFileName: string) => {
+  if (!imageFileName) return null;
+  return `${BASE_IMAGE_PATH}/${imageFileName}`;
+};
+
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -554,6 +557,20 @@ const HomeScreen: React.FC = () => {
     []
   );
   const [showAllCards, setShowAllCards] = useState(false);
+  const [imageMappings, setImageMappings] = useState<{
+    categories: ImageMapping[];
+    subcategories: ImageMapping[];
+  }>({ categories: [], subcategories: [] });
+
+  // Add this useEffect to fetch image mappings
+  useEffect(() => {
+    const loadImageMappings = async () => {
+      const mappings = await fetchImageMappings();
+      setImageMappings(mappings);
+    };
+    loadImageMappings();
+  }, []);
+
   const { cart } = useCart();
   const cartItemCount = cart.length;
 
@@ -604,6 +621,8 @@ const HomeScreen: React.FC = () => {
     }
   }, [CustomerID]);
 
+
+
   const fetchCategories = useCallback(async () => {
     if (!CustomerID) {
       console.log("CustomerID is not set");
@@ -626,10 +645,15 @@ const HomeScreen: React.FC = () => {
           (acc: CategoryItem[], current: CategoryItem) => {
             const x = acc.find((item) => item.CATID === current.CATID);
             if (!x) {
-              return acc.concat([current]);
-            } else {
-              return acc;
+              // Format the image name using the CATID
+              const formattedCategory = {
+                ...current,
+                categoryImage: formatImageName(current.CATID, true),
+                imageUrl: getCategoryImage(current.CATID)
+              };
+              return acc.concat([formattedCategory]);
             }
+            return acc;
           },
           []
         );
@@ -639,30 +663,34 @@ const HomeScreen: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
-      if (axios.isAxiosError(error)) {
-        if (error.response) {
-          Alert.alert(
-            "Server Error",
-            `Error ${error.response.status}: ${
-              error.response.data.message || "Unknown error"
-            }`
-          );
-        } else if (error.request) {
-          Alert.alert(
-            "Network Error",
-            "Unable to connect to the server. Please check your internet connection and try again."
-          );
-        } else {
-          Alert.alert(
-            "Error",
-            "An unexpected error occurred. Please try again."
-          );
-        }
-      } else {
-        Alert.alert("Error", "An unexpected error occurred. Please try again.");
-      }
     }
   }, [CustomerID]);
+
+  const renderCardItem = useCallback(
+    ({ item }: { item: CategoryItem }) => {
+      return (
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() =>
+            navigation.navigate("SubCategory", {
+              category: item.CATDESC,
+              categoryId: item.CATID,
+            })
+          }
+        >
+          <View style={styles.imageContainer}>
+            <Image
+              source={item.imageUrl}
+              style={styles.cardImage}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.cardText}>{item.CATDESC}</Text>
+        </TouchableOpacity>
+      );
+    },
+    [navigation]
+  );
 
   const handleSearch = useCallback(
     (text: string) => {
@@ -675,34 +703,6 @@ const HomeScreen: React.FC = () => {
     [categories]
   );
 
-  const renderCardItem = useCallback(
-    ({ item }: { item: CategoryItem }) => {
-      const imageSource = getImage(item.CAT_IMGFILE);
-
-      return (
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() =>
-            navigation.navigate("SubCategory", {
-              category: item.CATDESC,
-              categoryId: item.CATID,
-            })
-          }
-        >
-          <Image
-            source={imageSource}
-            style={styles.cardImage}
-            resizeMode="contain"
-            onError={() =>
-              console.warn(`Failed to load image: ${item.CAT_IMGFILE}`)
-            }
-          />
-          <Text style={styles.cardText}>{item.CATDESC}</Text>
-        </TouchableOpacity>
-      );
-    },
-    [navigation]
-  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -766,6 +766,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
   },
+  imageContainer: {
+    width: '100%',
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
   searchButton: {
     justifyContent: "center",
     alignItems: "center",
@@ -824,8 +833,7 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
-
-// src/screens/HomeScreen.js(Demo for image fetching)
+  
 
 // import { MaterialIcons } from "@expo/vector-icons";
 // import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -836,7 +844,7 @@ export default HomeScreen;
 //   useRoute,
 // } from "@react-navigation/native";
 // import axios from "axios";
-// import React, { useCallback, useEffect, useState } from "react";
+// import { default as React, useCallback, useEffect, useState } from "react";
 // import {
 //   Alert,
 //   Dimensions,
@@ -850,36 +858,33 @@ export default HomeScreen;
 //   TouchableOpacity,
 //   View,
 // } from "react-native";
-// import { auth } from "../../firebaseconfig";
-// import { getImage } from "../utils/imageLoader";
+// import { RootStackParamList } from "../../App";
+// import Carousel from "./Carousel";
 // import { useCart } from "./contexts/CartContext";
+// import { useDisplayName } from "./contexts/DisplayNameContext";
+// import Header from "./Header";
 
 // const BACKEND_URL = "http://192.168.1.3:3000";
-
-// type RootStackParamList = {
-//   // Add your other screen params here
-//   HomeScreen: { customerID?: string };
-//   Category: { category: string };
-//   Stocks: undefined;
-//   Inwards: undefined;
-//   Outwards: undefined;
-//   ExpiringProducts: undefined;
-//   Invoices: undefined;
-//   OrderPlacement: undefined;
-//   ProductSearch: undefined;
-//   OtpVerificationScreen: undefined;
-//   CartScreen: undefined;
-// };
 
 // type HomeScreenRouteProp = RouteProp<RootStackParamList, "HomeScreen">;
 // type HomeScreenNavigationProp = NavigationProp<RootStackParamList>;
 
 // type CategoryItem = {
-//   imageUrl: any;
 //   CATID: string;
 //   CATCODE: string;
 //   CATDESC: string;
-//   CAT_IMGFILE: string;
+//   imageUrl?: string;
+// };
+
+// type ImageIdResponse = {
+//   categories: Array<{
+//     id: string;
+//     imageUrl: string;
+//   }>;
+//   subcategories: Array<{
+//     id: string;
+//     imageUrl: string;
+//   }>;
 // };
 
 // const { width } = Dimensions.get("window");
@@ -889,13 +894,53 @@ export default HomeScreen;
 //   const route = useRoute<HomeScreenRouteProp>();
 //   const [CustomerID, setCustomerID] = useState<string | null>(null);
 //   const [searchQuery, setSearchQuery] = useState("");
+//   const { displayName, setDisplayName } = useDisplayName();
 //   const [categories, setCategories] = useState<CategoryItem[]>([]);
-//   const [filteredCategories, setFilteredCategories] = useState<CategoryItem[]>(
-//     []
-//   );
+//   const [filteredCategories, setFilteredCategories] = useState<CategoryItem[]>([]);
 //   const [showAllCards, setShowAllCards] = useState(false);
 //   const { cart } = useCart();
 //   const cartItemCount = cart.length;
+//   const [imageUrls, setImageUrls] = useState<Map<string, string>>(new Map());
+
+//   // Fetch image URLs
+//   const fetchImageUrls = useCallback(async () => {
+//     try {
+//       const response = await axios.get<ImageIdResponse>(`${BACKEND_URL}/image-ids`);
+//       const newImageUrls = new Map();
+      
+//       response.data.categories.forEach(({ id, imageUrl }) => {
+//         newImageUrls.set(id, imageUrl);
+//       });
+      
+//       setImageUrls(newImageUrls);
+//     } catch (error) {
+//       console.error("Error fetching image URLs:", error);
+//     }
+//   }, []);
+
+//   useEffect(() => {
+//     fetchImageUrls();
+//   }, [fetchImageUrls]);
+
+//   useEffect(() => {
+//     const fetchDisplayName = async () => {
+//       try {
+//         let name = await AsyncStorage.getItem("Disp_name");
+//         if (name) {
+//           setDisplayName(name);
+//         } else {
+//           const response = await axios.get(`${BACKEND_URL}/getCustomerInfo`);
+//           name = response.data.Disp_name;
+//           setDisplayName(name);
+//           await AsyncStorage.setItem("Disp_name", name || "");
+//         }
+//       } catch (error) {
+//         console.error("Error fetching Display Name:", error);
+//       }
+//     };
+
+//     fetchDisplayName();
+//   }, [route.params]);
 
 //   useEffect(() => {
 //     const fetchCustomerID = async () => {
@@ -941,16 +986,11 @@ export default HomeScreen;
 //         }
 //       );
 
-//       console.log("Response received:", response.data);
-
 //       if (response.data && response.data.output) {
 //         const uniqueCategories = response.data.output.reduce(
 //           (acc: CategoryItem[], current: CategoryItem) => {
 //             const x = acc.find((item) => item.CATID === current.CATID);
 //             if (!x) {
-//               console.log(
-//                 `Category: ${current.CATDESC}, CAT_IMGFILE: ${current.CAT_IMGFILE}`
-//               );
 //               return acc.concat([current]);
 //             } else {
 //               return acc;
@@ -966,42 +1006,23 @@ export default HomeScreen;
 //       console.error("Error fetching categories:", error);
 //       if (axios.isAxiosError(error)) {
 //         if (error.response) {
-//           console.error("Error data:", error.response.data);
-//           console.error("Error status:", error.response.status);
 //           Alert.alert(
 //             "Server Error",
-//             `Error ${error.response.status}: ${
-//               error.response.data.message || "Unknown error"
-//             }`
+//             `Error ${error.response.status}: ${error.response.data.message || "Unknown error"}`
 //           );
 //         } else if (error.request) {
-//           console.error("Error request:", error.request);
 //           Alert.alert(
 //             "Network Error",
 //             "Unable to connect to the server. Please check your internet connection and try again."
 //           );
 //         } else {
-//           console.error("Error message:", error.message);
-//           Alert.alert(
-//             "Error",
-//             "An unexpected error occurred. Please try again."
-//           );
+//           Alert.alert("Error", "An unexpected error occurred. Please try again.");
 //         }
 //       } else {
 //         Alert.alert("Error", "An unexpected error occurred. Please try again.");
 //       }
 //     }
 //   }, [CustomerID]);
-
-//   const handleLogout = useCallback(async () => {
-//     try {
-//       await auth.signOut();
-//       await AsyncStorage.removeItem("customerID");
-//       navigation.navigate("OtpVerificationScreen");
-//     } catch (error) {
-//       console.error("Logout error:", error);
-//     }
-//   }, [navigation]);
 
 //   const handleSearch = useCallback(
 //     (text: string) => {
@@ -1016,194 +1037,138 @@ export default HomeScreen;
 
 //   const renderCardItem = useCallback(
 //     ({ item }: { item: CategoryItem }) => {
-//       const imageSource = getImage(item.CAT_IMGFILE);
+//       const imageUrl = imageUrls.get(item.CATID);
 
-//       console.log(
-//         "Rendering item:",
-//         item.CATDESC,
-//         "with image:",
-//         item.CAT_IMGFILE
-//       );
+//       const categoryImage = imageUrl ? getImageForCategory(imageUrl) : require('../../assets/images/default.jpg');
+
 
 //       return (
 //         <TouchableOpacity
 //           style={styles.card}
 //           onPress={() =>
-//             navigation.navigate("Category", { category: item.CATDESC })
+//             navigation.navigate("SubCategory", {
+//               category: item.CATDESC,
+//               categoryId: item.CATID,
+//             })
 //           }
 //         >
 //           <Image
-//             source={imageSource}
+//             source={imageUrl ? { uri: `${BACKEND_URL}/images/${imageUrl}` } : require('../../assets/images/default.jpg')}
 //             style={styles.cardImage}
 //             resizeMode="contain"
-//             onError={() =>
-//               console.warn(`Failed to load image: ${item.CAT_IMGFILE}`)
-//             }
+//             onError={(error) => console.warn(`Failed to load image for category ${item.CATID}:`, error)}
 //           />
 //           <Text style={styles.cardText}>{item.CATDESC}</Text>
 //         </TouchableOpacity>
 //       );
 //     },
-//     [navigation]
+//     [navigation, imageUrls]
 //   );
 
 //   return (
 //     <SafeAreaView style={styles.safeArea}>
 //       <StatusBar barStyle="dark-content" backgroundColor="#ddd" />
-//       <View style={styles.header}>
-//         <View style={styles.logoContainer}>
-//           <Image
-//             source={require("../../assets/New folder/SavlaLogo.png")}
-//             style={styles.logo}
-//           />
-//           <Text style={styles.headerTitle}>UNICORP ENTERPRISES</Text>
-//         </View>
-//         <View style={styles.headerRightContainer}>
-//           <TouchableOpacity
-//             onPress={() => navigation.navigate("CartScreen")}
-//             style={styles.cartButton}
-//           >
-//             <MaterialIcons name="shopping-cart" size={24} color="#000" />
-//             {cartItemCount > 0 && (
-//               <View style={styles.cartBadge}>
-//                 <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
-//               </View>
-//             )}
-//           </TouchableOpacity>
-//           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-//             <MaterialIcons name="logout" size={24} color="#000" />
-//           </TouchableOpacity>
-//         </View>
-//       </View>
+//       <Header displayName={displayName} cartItemCount={cartItemCount} />
+
 //       <View style={styles.searchContainer}>
 //         <TextInput
 //           style={styles.searchInput}
-//           placeholder="Search by Category"
+//           placeholder="Search..."
 //           value={searchQuery}
 //           onChangeText={handleSearch}
 //         />
+//         <TouchableOpacity style={styles.searchButton}>
+//           <MaterialIcons name="search" size={24} color="#000" />
+//         </TouchableOpacity>
 //       </View>
+
+//       <Carousel />
+
+//       <View style={styles.headingContainer}>
+//         <Text style={styles.headingText}>Categories</Text>
+//         <TouchableOpacity onPress={() => setShowAllCards(!showAllCards)}>
+//           <Text style={styles.moreText}>
+//             {showAllCards ? "Less" : "More->"}
+//           </Text>
+//         </TouchableOpacity>
+//       </View>
+
 //       <FlatList
-//         data={
-//           showAllCards ? filteredCategories : filteredCategories.slice(0, 6)
-//         }
-//         keyExtractor={(item, index) => item.CATID}
+//         data={showAllCards ? filteredCategories : filteredCategories.slice(0, 6)}
 //         renderItem={renderCardItem}
+//         numColumns={2}
+//         keyExtractor={(item) => item.CATID}
 //         contentContainerStyle={styles.cardContainer}
-//         ListFooterComponent={
-//           !showAllCards && filteredCategories.length > 6 ? (
-//             <TouchableOpacity
-//               onPress={() => setShowAllCards(true)}
-//               style={styles.showMoreButton}
-//             >
-//               <Text style={styles.showMoreText}>Show More</Text>
-//             </TouchableOpacity>
-//           ) : null
-//         }
+//         scrollEnabled={true}
 //       />
 //     </SafeAreaView>
 //   );
 // };
 
 // const styles = StyleSheet.create({
-//   // ... your existing styles ...
 //   safeArea: {
 //     flex: 1,
-//     backgroundColor: "#f0f0f0",
-//   },
-//   header: {
-//     flexDirection: "row",
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     paddingHorizontal: 16,
-//     paddingVertical: 8,
-//     backgroundColor: "#fff",
-//     elevation: 4,
-//   },
-//   logoContainer: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//   },
-//   logo: {
-//     width: 50,
-//     height: 50,
-//     marginRight: 8,
-//   },
-//   headerTitle: {
-//     fontSize: 18,
-//     fontWeight: "bold",
-//     color: "#000",
-//   },
-//   headerRightContainer: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//   },
-//   cartButton: {
-//     marginRight: 16,
-//   },
-//   cartBadge: {
-//     position: "absolute",
-//     top: -4,
-//     right: -4,
-//     backgroundColor: "red",
-//     borderRadius: 8,
-//     paddingHorizontal: 4,
-//     paddingVertical: 2,
-//     justifyContent: "center",
-//     alignItems: "center",
-//   },
-//   cartBadgeText: {
-//     color: "#fff",
-//     fontSize: 10,
-//   },
-//   logoutButton: {
-//     marginLeft: 8,
+//     backgroundColor: '#fff',
 //   },
 //   searchContainer: {
-//     backgroundColor: "#fff",
-//     paddingHorizontal: 16,
-//     paddingVertical: 8,
-//     elevation: 2,
+//     flexDirection: 'row',
+//     padding: 10,
+//     backgroundColor: '#fff',
 //   },
 //   searchInput: {
-//     backgroundColor: "#f0f0f0",
-//     borderRadius: 8,
-//     paddingHorizontal: 16,
-//     paddingVertical: 8,
-//     fontSize: 16,
+//     flex: 1,
+//     height: 40,
+//     borderWidth: 1,
+//     borderColor: '#ddd',
+//     borderRadius: 20,
+//     paddingHorizontal: 15,
+//     marginRight: 10,
+//   },
+//   searchButton: {
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     width: 40,
+//   },
+//   headingContainer: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     padding: 10,
+//   },
+//   headingText: {
+//     fontSize: 18,
+//     fontWeight: 'bold',
+//   },
+//   moreText: {
+//     color: '#666',
 //   },
 //   cardContainer: {
-//     paddingHorizontal: 8,
-//     paddingVertical: 16,
+//     padding: 5,
 //   },
 //   card: {
 //     flex: 1,
-//     backgroundColor: "#fff",
-//     borderRadius: 8,
-//     marginHorizontal: 8,
-//     marginVertical: 8,
-//     alignItems: "center",
-//     padding: 16,
-//     elevation: 2,
+//     margin: 5,
+//     backgroundColor: '#fff',
+//     borderRadius: 10,
+//     padding: 10,
+//     alignItems: 'center',
+//     shadowColor: '#000',
+//     shadowOffset: {
+//       width: 0,
+//       height: 2,
+//     },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 3.84,
+//     elevation: 5,
 //   },
 //   cardImage: {
-//     width: 80,
-//     height: 80,
-//     marginBottom: 8,
+//     width: width * 0.4,
+//     height: width * 0.4,
+//     marginBottom: 10,
 //   },
 //   cardText: {
+//     textAlign: 'center',
 //     fontSize: 16,
-//     fontWeight: "bold",
-//     textAlign: "center",
-//     color: "#333",
-//   },
-//   showMoreButton: {
-//     paddingVertical: 16,
-//     alignItems: "center",
-//   },
-//   showMoreText: {
-//     fontSize: 16,
-//     color: "#007bff",
 //   },
 // });
 

@@ -37,6 +37,23 @@ interface Item {
   subcategoryId: string;
 }
 
+export interface CategoryImage {
+  id: string;
+  code: string;
+  description: string;
+  imageUrl: string;
+}
+
+export interface ImageMapping {
+  id: string;
+  imageUrl: string;
+}
+
+export interface ImageResponse {
+  categories: ImageMapping[];
+  subcategories: ImageMapping[];
+}
+
 
 
 export type RootStackNavProps<T extends keyof RootStackParamList> = {

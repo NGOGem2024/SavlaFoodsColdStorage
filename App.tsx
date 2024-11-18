@@ -130,13 +130,13 @@ export type RootStackParamList = {
   SubCategory:  { category: string; categoryId: string }; 
   ItemDetailsExpanded:{ItemID: number};
   CartScreen: undefined;
-  LotReportScreen: { item: any };
+  LotReportScreen: undefined;
   Announcement: undefined;
   BottomTabNavigator: undefined;
   ItemDetailScreen: {
     subcategoryId: string;
     subcategoryName: string;
-    subcatImgFile: string;
+    subcategoryImage: string;
   };
 };
 

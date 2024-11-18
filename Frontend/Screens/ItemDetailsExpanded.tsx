@@ -1646,7 +1646,7 @@
 
 // export default ItemDetailsExpanded;
 
-import { RouteProp } from "@react-navigation/native";
+import { NavigationProp, RouteProp } from "@react-navigation/native";
 import axios from "axios";
 import { CreditCard, Grid, Search } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
@@ -1654,6 +1654,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Modal,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -1697,11 +1698,18 @@ interface APIResponse {
   };
 }
 
-type ItemDetailsExpandedProps = {
-  route: RouteProp<RootStackParamList, "ItemDetailsExpanded">;
-};
+type ItemDetailsExpandedRouteProp = RouteProp<
+  RootStackParamList,
+  "ItemDetailsExpanded"
+>;
+type ItemDetailsExpandedNavigationProp = NavigationProp<RootStackParamList>;
 
-const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route }) => {
+interface ItemDetailsExpandedProps {
+  route: ItemDetailsExpandedRouteProp;
+  navigation: ItemDetailsExpandedNavigationProp;
+}
+ 
+const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, navigation }) => {
   const [itemDetails, setItemDetails] = useState<ItemDetails | null>(null);
   const [stockDetails, setStockDetails] = useState<StockDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1710,6 +1718,51 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isTableView, setIsTableView] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
+  const [cartAnimations, setCartAnimations] = useState<{
+    [key: string]: Animated.Value;
+  }>({});
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [quantity, setQuantity] = useState("");
+  const [selectedLotNo, setSelectedLotNo] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    const animations: { [key: string]: Animated.Value } = {};
+    stockDetails.forEach((stock) => {
+      animations[stock.LOT_NO || ""] = new Animated.Value(0);
+    });
+    setCartAnimations(animations);
+  }, [stockDetails]);
+
+   // Add cart functionality
+   const handleAddToCart = (lotNo: string | null) => {
+    if (!lotNo) return;
+    
+    // Trigger animation
+    Animated.sequence([
+      Animated.timing(cartAnimations[lotNo], {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(cartAnimations[lotNo], {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    setSelectedLotNo(lotNo);
+    setModalVisible(true);
+  };
+
+  const handleConfirmQuantity = () => {
+    console.log("Item added to cart with quantity:", quantity);
+    console.log("Lot No:", selectedLotNo);
+    setModalVisible(false);
+    setQuantity("");
+    setSelectedLotNo(null);
+  };
 
   const fetchStockDetails = async (showLoader = true) => {
     if (showLoader) setLoading(true);
@@ -1860,13 +1913,50 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route }) => {
           onLayout={() => fadeIn(index)}
         >
           {/* <View key={index} style={styles.stockCard}> */}
-          <View style={styles.stockHeader}>
-            <View style={styles.lotNoContainer}>
+          <View style={styles.stockHeader}>             
+            {/* <View style={styles.lotNoContainer}>
               <Text style={styles.lotNoLabel}>LOT NO : </Text>
               <View style={styles.lotNoValueContainer}>
                 <Text style={styles.lotNoValue}>{stock.LOT_NO || "N/A"}</Text>
               </View>
-            </View>
+            </View> */}
+
+<View style={styles.lotNoContainer}>
+  <Text style={styles.lotNoLabel}>LOT NO : </Text>
+  <TouchableOpacity
+    style={styles.lotNoValueContainer}
+    onPress={() => navigation.navigate('LotReportScreen')}
+  >
+    <Text style={styles.lotNoValue}>{stock.LOT_NO || "N/A"}</Text>
+  </TouchableOpacity>
+</View>
+
+            <Animated.View
+              style={[
+                styles.addToCartContainer,
+                {
+                  transform: [
+                    {
+                      scale: cartAnimations[stock.LOT_NO || ""]?.interpolate({
+                        inputRange: [0, 0.5, 1],
+                        outputRange: [1, 1.2, 1],
+                      }) || 1,
+                    },
+                  ],
+                },
+              ]}
+            >
+              <TouchableOpacity
+                style={styles.addToCartButton}
+                onPress={() => handleAddToCart(stock.LOT_NO)}
+              >
+                <View style={styles.cartIconWrapper}>
+                  <Text style={styles.cartIcon}>🛒</Text>
+                </View>
+                {/* <Text style={styles.addToCartText}>Add</Text> */}
+              </TouchableOpacity>
+            </Animated.View>
+            
             {/* <View style={styles.quantityContainer}>
               <Text style={styles.quantityValue}>
                 {formatQuantity(stock.AVAILABLE_QTY)}
@@ -1933,6 +2023,32 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route }) => {
           </View>
         </Animated.View>
       ))}
+
+      <Modal
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Enter Quantity</Text>          
+            <TextInput
+              style={styles.quantityInput}
+              placeholder="Enter quantity"
+              keyboardType="numeric"
+              value={quantity}
+              onChangeText={setQuantity}
+            />
+            <TouchableOpacity
+              style={styles.confirmButton}
+              onPress={handleConfirmQuantity}
+            >
+              <Text style={styles.confirmButtonText}>Add Quantity</Text>
+              <Text style={styles.confirmButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 
@@ -2295,6 +2411,74 @@ const styles = StyleSheet.create({
     borderRightColor: "#dadce0",
     justifyContent: "center",
   },
+  addToCartContainer: {
+    marginLeft: 8,
+  },
+  addToCartButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFDD0",
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: 25,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+     
+  },
+  cartIconWrapper: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 20,
+    // padding: 4,
+    // marginRight: 8,
+  },
+  cartIcon: {
+    fontSize: 20,     
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    marginBottom: 15,
+  },
+  quantityInput: {
+    width: "100%",
+    padding: 10,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 20,
+  },
+  confirmButton: {
+    backgroundColor: "#28a745",
+    padding: 10,
+    borderRadius: 5,
+    flexDirection:'row'
+  },
+  confirmButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    
+  },
+  // addToCartText: {
+  //   color: "#F48221",
+  //   fontSize: 14,
+  //   fontWeight: "700",
+  //   marginLeft: -4,
+  // },
 });
 
 export default ItemDetailsExpanded;

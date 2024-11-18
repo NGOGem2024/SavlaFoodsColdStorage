@@ -940,300 +940,300 @@
 // export default Category;
 
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import axios from 'axios';
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  FlatList,
-  Image,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
-} from 'react-native';
-import { getImage } from "../utils/imageLoader";
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+// import axios from 'axios';
+// import React, { useCallback, useEffect, useState } from 'react';
+// import {
+//   ActivityIndicator,
+//   Alert,
+//   Dimensions,
+//   FlatList,
+//   Image,
+//   SafeAreaView,
+//   StyleSheet,
+//   Text,
+//   TouchableOpacity,
+//   View
+// } from 'react-native';
 
-const BACKEND_URL = "http://192.168.1.3:3000";
 
-// Type definitions
-type RootStackParamList = {
-  Category: { 
-    category: string;
-  };
-  SubcategoryItems: {
-    subcategoryId: string;
-    subcategoryName: string;
-    subcatImgFile:string;
-  };
-  ItemDetailScreen:undefined;
-};
+// const BACKEND_URL = "http://192.168.1.3:3000";
 
-type CategoryScreenRouteProp = RouteProp<RootStackParamList, 'Category'>;
+// // Type definitions
+// type RootStackParamList = {
+//   Category: { 
+//     category: string;
+//   };
+//   SubcategoryItems: {
+//     subcategoryId: string;
+//     subcategoryName: string;
+//     subcatImgFile:string;
+//   };
+//   ItemDetailScreen:undefined;
+// };
 
-type SubCategoryItem = {
-  CAT_ID: string;
-  CATDESC:string;
-  SUBCATID: string;
-  SUBCATCODE: string;
-  SUBCATDESC: string;
-  SUBCAT_IMGFILE: string;
-};
+// type CategoryScreenRouteProp = RouteProp<RootStackParamList, 'Category'>;
 
-type NavigationProp = {
-  navigate: (screen: string, params: any) => void;
-};
+// type SubCategoryItem = {
+//   CAT_ID: string;
+//   CATDESC:string;
+//   SUBCATID: string;
+//   SUBCATCODE: string;
+//   SUBCATDESC: string;
+//   SUBCAT_IMGFILE: string;
+// };
 
-const { width } = Dimensions.get('window');
+// type NavigationProp = {
+//   navigate: (screen: string, params: any) => void;
+// };
 
-const Category: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
-  const route = useRoute<CategoryScreenRouteProp>();
-  const [CustomerID, setCustomerID] = useState<string | null>(null);
-  const [subCategories, setSubCategories] = useState<SubCategoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(route.params.category); // Use category from route params
+// const { width } = Dimensions.get('window');
 
-  // Fetch CustomerID from AsyncStorage
-  useEffect(() => {
-    const fetchCustomerID = async () => {
-      try {
-        let id = await AsyncStorage.getItem("customerID");
-        if (id) {
-          setCustomerID(id);
-          await AsyncStorage.setItem("customerID", id);
-        } else {
-          const response = await axios.get(`${BACKEND_URL}/getCustomerID`);
-          id = response.data.customerID;
-          setCustomerID(id);
-          await AsyncStorage.setItem("customerID", id || "");
-        }
-      } catch (error) {
-        console.error("Error fetching CustomerID:", error);
-        setError("Failed to fetch Customer ID");
-      }
-    };
+// const Category: React.FC = () => {
+//   const navigation = useNavigation<NavigationProp>();
+//   const route = useRoute<CategoryScreenRouteProp>();
+//   const [CustomerID, setCustomerID] = useState<string | null>(null);
+//   const [subCategories, setSubCategories] = useState<SubCategoryItem[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
+//   const [refreshing, setRefreshing] = useState(false);
+//   const [selectedCategory, setSelectedCategory] = useState<string | null>(route.params.category); // Use category from route params
 
-    fetchCustomerID();
-  }, []);
+//   // Fetch CustomerID from AsyncStorage
+//   useEffect(() => {
+//     const fetchCustomerID = async () => {
+//       try {
+//         let id = await AsyncStorage.getItem("customerID");
+//         if (id) {
+//           setCustomerID(id);
+//           await AsyncStorage.setItem("customerID", id);
+//         } else {
+//           const response = await axios.get(`${BACKEND_URL}/getCustomerID`);
+//           id = response.data.customerID;
+//           setCustomerID(id);
+//           await AsyncStorage.setItem("customerID", id || "");
+//         }
+//       } catch (error) {
+//         console.error("Error fetching CustomerID:", error);
+//         setError("Failed to fetch Customer ID");
+//       }
+//     };
 
-  const fetchSubCategories = useCallback(async () => {
-    if (!CustomerID || !selectedCategory) {
-      console.log("Waiting for CustomerID or selected category...");
+//     fetchCustomerID();
+//   }, []);
+
+//   const fetchSubCategories = useCallback(async () => {
+//     if (!CustomerID || !selectedCategory) {
+//       console.log("Waiting for CustomerID or selected category...");
       
-      return;
-    }
+//       return;
+//     }
 
-    try {
-      setLoading(true);
-      setError(null);
+//     try {
+//       setLoading(true);
+//       setError(null);
 
-      const response = await axios.post(
-        `${BACKEND_URL}/sf/getItemCatSubCat`,
-        {
-          CustomerID: CustomerID
-        },
-        {
-          timeout: 10000
-        }
-      );
+//       const response = await axios.post(
+//         `${BACKEND_URL}/sf/getItemCatSubCat`,
+//         {
+//           CustomerID: CustomerID
+//         },
+//         {
+//           timeout: 10000
+//         }
+//       );
 
-      // console.log("Response received:", response.data);
+//       // console.log("Response received:", response.data);
 
-      if (response.data && response.data.output) {
-        // Filter subcategories based on the selected category
-        const filteredSubCategories = response.data.output.filter((item: SubCategoryItem) => {
-          return item.CATDESC === selectedCategory; // Filter based on category description
-        });
+//       if (response.data && response.data.output) {
+//         // Filter subcategories based on the selected category
+//         const filteredSubCategories = response.data.output.filter((item: SubCategoryItem) => {
+//           return item.CATDESC === selectedCategory; // Filter based on category description
+//         });
 
-        // Extract unique subcategories using a Map to ensure uniqueness
-        const uniqueMap = new Map();
-        filteredSubCategories.forEach((item: SubCategoryItem) => {
-          if (!uniqueMap.has(item.SUBCATID)) {
-            uniqueMap.set(item.SUBCATID, {
-              SUBCATID: item.SUBCATID,
-              SUBCATCODE: item.SUBCATCODE,
-              SUBCATDESC: item.SUBCATDESC,
-              SUBCAT_IMGFILE: item.SUBCAT_IMGFILE
-            });
-          }
-        });
+//         // Extract unique subcategories using a Map to ensure uniqueness
+//         const uniqueMap = new Map();
+//         filteredSubCategories.forEach((item: SubCategoryItem) => {
+//           if (!uniqueMap.has(item.SUBCATID)) {
+//             uniqueMap.set(item.SUBCATID, {
+//               SUBCATID: item.SUBCATID,
+//               SUBCATCODE: item.SUBCATCODE,
+//               SUBCATDESC: item.SUBCATDESC,
+//               SUBCAT_IMGFILE: item.SUBCAT_IMGFILE
+//             });
+//           }
+//         });
 
-        const uniqueSubCategories = Array.from(uniqueMap.values());
-        setSubCategories(uniqueSubCategories);
-        // console.log("Filtered subcategories set:", uniqueSubCategories);
-      } else {
-        setError('No data received from server');
-      }
-    } catch (err) {
-      console.error('Error fetching subcategories:', err);
-      if (axios.isAxiosError(err)) {
-        if (err.response) {
-          console.error("Error data:", err.response.data);
-          console.error("Error status:", err.response.status);
-          setError(`Server error: ${err.response.status}`);
-        } else if (err.request) {
-          console.error("Error request:", err.request);
-          setError('Network error. Please check your connection.');
-        } else {
-          console.error("Error message:", err.message);
-          setError('An unexpected error occurred');
-        }
-      } else {
-        setError('Failed to load subcategories');
-      }
-      Alert.alert(
-        'Error',
-        'Failed to load subcategories. Please try again.',
-        [{ text: 'OK' }]
-      );
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [CustomerID, selectedCategory]); // Add selectedCategory as a dependency
+//         const uniqueSubCategories = Array.from(uniqueMap.values());
+//         setSubCategories(uniqueSubCategories);
+//         // console.log("Filtered subcategories set:", uniqueSubCategories);
+//       } else {
+//         setError('No data received from server');
+//       }
+//     } catch (err) {
+//       console.error('Error fetching subcategories:', err);
+//       if (axios.isAxiosError(err)) {
+//         if (err.response) {
+//           console.error("Error data:", err.response.data);
+//           console.error("Error status:", err.response.status);
+//           setError(`Server error: ${err.response.status}`);
+//         } else if (err.request) {
+//           console.error("Error request:", err.request);
+//           setError('Network error. Please check your connection.');
+//         } else {
+//           console.error("Error message:", err.message);
+//           setError('An unexpected error occurred');
+//         }
+//       } else {
+//         setError('Failed to load subcategories');
+//       }
+//       Alert.alert(
+//         'Error',
+//         'Failed to load subcategories. Please try again.',
+//         [{ text: 'OK' }]
+//       );
+//     } finally {
+//       setLoading(false);
+//       setRefreshing(false);
+//     }
+//   }, [CustomerID, selectedCategory]); // Add selectedCategory as a dependency
 
-  // Fetch subcategories when CustomerID or selectedCategory is available
-  useEffect(() => {
-    if (CustomerID) {
-      fetchSubCategories();
-    }
-  }, [CustomerID, fetchSubCategories, selectedCategory]);
+//   // Fetch subcategories when CustomerID or selectedCategory is available
+//   useEffect(() => {
+//     if (CustomerID) {
+//       fetchSubCategories();
+//     }
+//   }, [CustomerID, fetchSubCategories, selectedCategory]);
 
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchSubCategories();
-  }, [fetchSubCategories]);
+//   const handleRefresh = useCallback(() => {
+//     setRefreshing(true);
+//     fetchSubCategories();
+//   }, [fetchSubCategories]);
 
-  const handleSubCategoryPress = useCallback((item: SubCategoryItem) => {
-  navigation.navigate('ItemDetailScreen', {
-  subcategoryId: item.SUBCATID,
-  subcategoryName: item.SUBCATDESC,
-  subcatImgFile: item.SUBCAT_IMGFILE
-});
-  }, [navigation]);
+//   const handleSubCategoryPress = useCallback((item: SubCategoryItem) => {
+//   navigation.navigate('ItemDetailScreen', {
+//   subcategoryId: item.SUBCATID,
+//   subcategoryName: item.SUBCATDESC,
+//   subcatImgFile: item.SUBCAT_IMGFILE
+// });
+//   }, [navigation]);
 
-  const renderSubCategoryItem = useCallback(({ item }: { item: SubCategoryItem }) => {
-    const imageSource = getImage(item.SUBCAT_IMGFILE);
+//   const renderSubCategoryItem = useCallback(({ item }: { item: SubCategoryItem }) => {
+//     // const imageSource = getImage(item.SUBCAT_IMGFILE);
     
-    // console.log("Rendering item:", item.SUBCATDESC, "with image:", item.SUBCAT_IMGFILE);
+//     // console.log("Rendering item:", item.SUBCATDESC, "with image:", item.SUBCAT_IMGFILE);
     
-    return (
+//     return (
     
-      <TouchableOpacity 
-        style={styles.card}
-        activeOpacity={0.7}
-        onPress={() => handleSubCategoryPress(item)}
-      >
-        <View style={styles.imageContainer}>
-          <Image
-            source={imageSource}
-            style={styles.cardImage}
-            resizeMode="contain"
-            onError={() => console.warn(`Failed to load image: ${item.SUBCAT_IMGFILE}`)}
-          />
-        </View>
-        <View style={styles.cardContent}>
-          <Text style={styles.categoryCode}>{item.SUBCATCODE}</Text>
-          <Text style={styles.categoryName} numberOfLines={2}>
-            {item.SUBCATDESC}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-  }, [handleSubCategoryPress]);
+//       <TouchableOpacity 
+//         style={styles.card}
+//         activeOpacity={0.7}
+//         onPress={() => handleSubCategoryPress(item)}
+//       >
+//         <View style={styles.imageContainer}>
+//           <Image
+//             // source={imageSource}
+//             style={styles.cardImage}
+//             resizeMode="contain"
+//             onError={() => console.warn(`Failed to load image: ${item.SUBCAT_IMGFILE}`)}
+//           />
+//         </View>
+//         <View style={styles.cardContent}>
+//           <Text style={styles.categoryCode}>{item.SUBCATCODE}</Text>
+//           <Text style={styles.categoryName} numberOfLines={2}>
+//             {item.SUBCATDESC}
+//           </Text>
+//         </View>
+//       </TouchableOpacity>
+//     );
+//   }, [handleSubCategoryPress]);
 
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
+//   if (loading && !refreshing) {
+//     return (
+//       <View style={styles.centerContainer}>
+//         <ActivityIndicator size="large" color="#0000ff" />
+//       </View>
+//     );
+//   }
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <FlatList
-        data={subCategories}
-        renderItem={renderSubCategoryItem}
-        keyExtractor={(item) => item.SUBCATID}
-        numColumns={2}
-        contentContainerStyle={styles.listContainer}
-        onRefresh={handleRefresh}
-        refreshing={refreshing}
-        ListEmptyComponent={() => (
-          <View style={styles.centerContainer}>
-            <Text style={styles.emptyText}>
-              {error || 'No subcategories found'}
-            </Text>
-          </View>
-        )}
-      />
-    </SafeAreaView>
-  );
-};
+//   return (
+//     <SafeAreaView style={styles.safeArea}>
+//       <FlatList
+//         data={subCategories}
+//         renderItem={renderSubCategoryItem}
+//         keyExtractor={(item) => item.SUBCATID}
+//         numColumns={2}
+//         contentContainerStyle={styles.listContainer}
+//         onRefresh={handleRefresh}
+//         refreshing={refreshing}
+//         ListEmptyComponent={() => (
+//           <View style={styles.centerContainer}>
+//             <Text style={styles.emptyText}>
+//               {error || 'No subcategories found'}
+//             </Text>
+//           </View>
+//         )}
+//       />
+//     </SafeAreaView>
+//   );
+// };
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff'
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  listContainer: {
-    padding: 10
-  },
-  card: {
-    flex: 1,
-    margin: 5,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    maxWidth: (width - 30) / 2,
-  },
-  imageContainer: {
-    height: 120,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    overflow: 'hidden'
-  },
-  cardImage: {
-    width: '100%',
-    height: '100%'
-  },
-  cardContent: {
-    padding: 10
-  },
-  categoryCode: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4
-  },
-  categoryName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333'
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666'
-  }
-});
+// const styles = StyleSheet.create({
+//   safeArea: {
+//     flex: 1,
+//     backgroundColor: '#fff'
+//   },
+//   centerContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center'
+//   },
+//   listContainer: {
+//     padding: 10
+//   },
+//   card: {
+//     flex: 1,
+//     margin: 5,
+//     backgroundColor: '#fff',
+//     borderRadius: 10,
+//     elevation: 3,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 3.84,
+//     maxWidth: (width - 30) / 2,
+//   },
+//   imageContainer: {
+//     height: 120,
+//     borderTopLeftRadius: 10,
+//     borderTopRightRadius: 10,
+//     overflow: 'hidden'
+//   },
+//   cardImage: {
+//     width: '100%',
+//     height: '100%'
+//   },
+//   cardContent: {
+//     padding: 10
+//   },
+//   categoryCode: {
+//     fontSize: 12,
+//     color: '#666',
+//     marginBottom: 4
+//   },
+//   categoryName: {
+//     fontSize: 14,
+//     fontWeight: 'bold',
+//     color: '#333'
+//   },
+//   emptyText: {
+//     fontSize: 16,
+//     color: '#666'
+//   }
+// });
 
-export default Category;
+// export default Category;
   
 
  
@@ -1587,6 +1587,646 @@ export default Category;
 //     color: '#666',
 //     textAlign: 'center'
 //   }
+// });
+
+// export default Category;
+ 
+import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import axios from 'axios';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  FlatList,
+  Image,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { fetchImageMappings, formatImageName, getSubcategoryImage, ImageMapping } from '../utils/imageRegistry';
+import { useCart } from './contexts/CartContext';
+
+const BACKEND_URL = "http://192.168.1.3:3000";
+
+type RootStackParamList = {
+  SubCategory: { 
+    category: string;
+    categoryId: string;
+  };
+  ItemDetailScreen: {
+    subcategoryId: string;
+    subcategoryName: string;
+    subcategoryImage: string;
+  };
+};
+
+type SubCategoryScreenRouteProp = RouteProp<RootStackParamList, 'SubCategory'>;
+
+type SubCategoryItem = {
+  CATID: string;
+  CATDESC: string;
+  SUBCATID: string;
+  SUBCATCODE: string;
+  SUBCATDESC: string;
+  subcategoryImage: string;
+  imageUrl: any;
+};
+
+type NavigationProp = {
+  navigate: (screen: string, params: any) => void;
+};
+
+const { width } = Dimensions.get('window');
+
+const SubCategory: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<SubCategoryScreenRouteProp>();
+  const [CustomerID, setCustomerID] = useState<string | null>(null);
+  const [subCategories, setSubCategories] = useState<SubCategoryItem[]>([]);
+  const [filteredSubCategories, setFilteredSubCategories] = useState<SubCategoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const [imageMappings, setImageMappings] = useState<{
+    categories: ImageMapping[];
+    subcategories: ImageMapping[];
+  }>({ categories: [], subcategories: [] });
+
+  const { cart } = useCart();
+  const cartItemCount = cart.length;
+
+  // Fetch images mappings
+  useEffect(() => {
+    const loadImageMappings = async () => {
+      const mappings = await fetchImageMappings();
+      setImageMappings(mappings);
+    };
+    loadImageMappings();
+  }, []);
+
+  // Fetch CustomerID from AsyncStorage
+  useEffect(() => {
+    const fetchCustomerID = async () => {
+      try {
+        let id = await AsyncStorage.getItem("customerID");
+        if (id) {
+          setCustomerID(id);
+        } else {
+          const response = await axios.get(`${BACKEND_URL}/getCustomerID`);
+          id = response.data.customerID;
+          if (id) {
+            setCustomerID(id);
+            await AsyncStorage.setItem("customerID", id);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching CustomerID:", error);
+        setError("Failed to fetch Customer ID");
+      }
+    };
+
+    fetchCustomerID();
+  }, []);
+
+  // Fetch subcategories
+  useEffect(() => {
+    if (CustomerID && route.params.categoryId) {
+      fetchSubCategories();
+    }
+  }, [CustomerID, route.params.categoryId]);
+
+  const fetchSubCategories = useCallback(async () => {
+    if (!CustomerID || !route.params.categoryId) {
+      console.log("Waiting for CustomerID or categoryId...");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await axios.post(
+        `${BACKEND_URL}/sf/getItemCatSubCat`,
+        {
+          CustomerID: CustomerID
+        },
+        {
+          timeout: 10000
+        }
+      );
+
+      if (response.data && response.data.output) {
+        // console.log('Total items received:', response.data.output.length);
+        // console.log('Category ID to filter:', route.params.categoryId);
+
+        const filteredSubCategories = response.data.output.filter((item: SubCategoryItem) => 
+          item.CATID === route.params.categoryId
+        );
+
+        // console.log('Filtered subcategories:', filteredSubCategories.length);
+
+        const uniqueSubCategories = filteredSubCategories.map((item: SubCategoryItem) => ({
+          ...item,
+          subcategoryImage: formatImageName(item.SUBCATID, false),
+          imageUrl: getSubcategoryImage(item.SUBCATID)
+        }));
+
+        setSubCategories(uniqueSubCategories);
+        setFilteredSubCategories(uniqueSubCategories);
+      } else {
+        setError('No data received from server');
+      }
+    } catch (err) {
+      console.error('Error fetching subcategories:', err);
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          setError(`Server error: ${err.response.status}`);
+        } else if (err.request) {
+          setError('Network error. Please check your connection.');
+        } else {
+          setError('An unexpected error occurred');
+        }
+      } else {
+        setError('Failed to load subcategories');
+      }
+      Alert.alert(
+        'Error',
+        'Failed to load subcategories. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [CustomerID, route.params.categoryId]);
+
+  const handleSearch = useCallback((text: string) => {
+    setSearchQuery(text);
+    const filtered = subCategories.filter((subcategory) =>
+      subcategory.SUBCATDESC.toLowerCase().includes(text.toLowerCase())
+    );
+    setFilteredSubCategories(filtered);
+  }, [subCategories]);
+
+  const handleSubCategoryPress = useCallback((item: SubCategoryItem) => {
+    navigation.navigate('ItemDetailScreen', {
+      subcategoryId: item.SUBCATID,
+      subcategoryName: item.SUBCATDESC,
+      subcategoryImage: item.subcategoryImage,
+      
+    });
+  }, [navigation]);
+   
+
+  const renderSubCategoryItem = useCallback(({ item }: { item: SubCategoryItem }) => {
+    return (
+      <TouchableOpacity 
+        style={styles.card}
+        activeOpacity={0.7}
+        onPress={() => handleSubCategoryPress(item)}
+      >
+        <View style={styles.imageContainer}>
+          <Image
+            source={item.imageUrl}
+            style={styles.cardImage}
+            resizeMode="contain"
+            onError={(error) => {
+              console.warn(`Failed to load image for subcategory ${item.SUBCATID}:`, error);
+            }}
+          />
+        </View>
+        <View style={styles.cardContent}>
+          <Text style={styles.categoryCode}>{item.SUBCATCODE}</Text>
+          <Text style={styles.categoryName} numberOfLines={2}>
+            {item.SUBCATDESC}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  }, [handleSubCategoryPress]);
+
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#ddd" />
+      {/* <Header title={route.params.category} cartItemCount={cartItemCount} /> */}
+
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search subcategories..."
+          value={searchQuery}
+          onChangeText={handleSearch}
+        />
+        <TouchableOpacity style={styles.searchButton}>
+          <MaterialIcons name="search" size={24} color="#000" />
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={filteredSubCategories}
+        renderItem={renderSubCategoryItem}
+        keyExtractor={(item) => item.SUBCATID}
+        numColumns={2}
+        contentContainerStyle={styles.listContainer}
+        onRefresh={fetchSubCategories}
+        refreshing={refreshing}
+        ListEmptyComponent={() => (
+          <View style={styles.centerContainer}>
+            <Text style={styles.emptyText}>
+              {error || 'No subcategories found'}
+            </Text>
+          </View>
+        )}
+      />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    padding: 10,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    marginRight: 10,
+  },
+  searchButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 20,
+  },
+  listContainer: {
+    padding: 10,
+  },
+  card: {
+    flex: 1,
+    margin: 5,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    maxWidth: (width - 30) / 2,
+  },
+  imageContainer: {
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  cardContent: {
+    padding: 10,
+  },
+  categoryCode: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  categoryName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+});
+
+export default SubCategory;
+
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+// import axios from 'axios';
+// import React, { useCallback, useEffect, useState } from 'react';
+// import {
+//   ActivityIndicator,
+//   Alert,
+//   Dimensions,
+//   FlatList,
+//   Image,
+//   SafeAreaView,
+//   StyleSheet,
+//   Text,
+//   TouchableOpacity,
+//   View
+// } from 'react-native';
+// import { fetchImageMappings, formatImageName, getSubcategoryImage, ImageMapping } from '../utils/imageUtils';
+
+// const BACKEND_URL = "http://192.168.1.3:3000";
+
+// type RootStackParamList = {
+//   Category: { 
+//     category: string;
+//   };
+//   SubcategoryItems: {
+//     subcategoryId: string;
+//     subcategoryName: string;
+//     subcategoryImage: string;
+//   };
+//   ItemDetailScreen: undefined;
+// };
+
+// type SubCategoryScreenRouteProp = RouteProp<RootStackParamList, 'SubcategoryItems'>;
+
+// type SubCategoryItem = {
+//   CAT_ID: string;
+//   CATDESC: string;
+//   SUBCATID: string;
+//   SUBCATCODE: string;
+//   SUBCATDESC: string;
+//   subcategoryImage: string;
+//   imageUrl: any;
+// };
+
+// type NavigationProp = {
+//   navigate: (screen: string, params: any) => void;
+// };
+
+// const { width } = Dimensions.get('window');
+
+// const Category: React.FC = () => {
+//   const navigation = useNavigation<NavigationProp>();
+//   const route = useRoute<SubCategoryScreenRouteProp>();
+//   const [CustomerID, setCustomerID] = useState<string | null>(null);
+//   const [subCategories, setSubCategories] = useState<SubCategoryItem[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
+//   const [refreshing, setRefreshing] = useState(false);
+//   const [selectedCategory, setSelectedCategory] = useState<string | null>(route.params.subcategoryName);
+//   const [imageMappings, setImageMappings] = useState<{
+//     categories: ImageMapping[];
+//     subcategories: ImageMapping[];
+//   }>({ categories: [], subcategories: [] });
+
+//   // Fetch images mappings
+//   useEffect(() => {
+//     const loadImageMappings = async () => {
+//       const mappings = await fetchImageMappings();
+//       setImageMappings(mappings);
+//     };
+//     loadImageMappings();
+//   }, []);
+
+//   // Fetch CustomerID from AsyncStorage
+//   useEffect(() => {
+//     const fetchCustomerID = async () => {
+//       try {
+//         let id = await AsyncStorage.getItem("customerID");
+//         if (id) {
+//           setCustomerID(id);
+//         } else {
+//           const response = await axios.get(`${BACKEND_URL}/getCustomerID`);
+//           id = response.data.customerID;
+//           if (id) {
+//             setCustomerID(id);
+//             await AsyncStorage.setItem("customerID", id);
+//           }
+//         }
+//       } catch (error) {
+//         console.error("Error fetching CustomerID:", error);
+//         setError("Failed to fetch Customer ID");
+//       }
+//     };
+
+//     fetchCustomerID();
+//   }, []);
+
+//   // Fetch subcategories
+//   useEffect(() => {
+//     if (CustomerID && route.params.subcategoryId) {
+//       fetchSubCategories();
+//     }
+//   }, [CustomerID, route.params.subcategoryId]);
+
+//   const fetchSubCategories = useCallback(async () => {
+//     if (!CustomerID || !route.params.subcategoryId) {
+//       console.log("Waiting for CustomerID or subcategoryId...");
+//       return;
+//     }
+
+//     try {
+//       setLoading(true);
+//       setError(null);
+
+//       const response = await axios.post(
+//         `${BACKEND_URL}/sf/getItemCatSubCat`,
+//         {
+//           CustomerID: CustomerID
+//         },
+//         {
+//           timeout: 10000
+//         }
+//       );
+
+//       if (response.data && response.data.output) {
+//         const filteredSubCategories = response.data.output.filter((item: SubCategoryItem) => 
+//           item.SUBCATID === route.params.subcategoryId
+//         );
+
+//         const uniqueSubCategories = filteredSubCategories.map((item: SubCategoryItem) => ({
+//           ...item,
+//           subcategoryImage: formatImageName(item.SUBCATID, true),
+//           imageUrl: getSubcategoryImage(item.SUBCATID)
+//         }));
+
+//         setSubCategories(uniqueSubCategories);
+//       } else {
+//         setError('No data received from server');
+//       }
+//     } catch (err) {
+//       console.error('Error fetching subcategories:', err);
+//       if (axios.isAxiosError(err)) {
+//         if (err.response) {
+//           setError(`Server error: ${err.response.status}`);
+//         } else if (err.request) {
+//           setError('Network error. Please check your connection.');
+//         } else {
+//           setError('An unexpected error occurred');
+//         }
+//       } else {
+//         setError('Failed to load subcategories');
+//       }
+//       Alert.alert(
+//         'Error',
+//         'Failed to load subcategories. Please try again.',
+//         [{ text: 'OK' }]
+//       );
+//     } finally {
+//       setLoading(false);
+//       setRefreshing(false);
+//     }
+//   }, [CustomerID, route.params.subcategoryId]);
+
+//   const handleRefresh = useCallback(() => {
+//     setRefreshing(true);
+//     fetchSubCategories();
+//   }, [fetchSubCategories]);
+
+//   const handleSubCategoryPress = useCallback((item: SubCategoryItem) => {
+//     navigation.navigate('ItemDetailScreen', {
+//       subcategoryId: item.SUBCATID,
+//       subcategoryName: item.SUBCATDESC,
+//       subcategoryImage: item.subcategoryImage
+//     });
+//   }, [navigation]);
+
+//   const renderSubCategoryItem = useCallback(({ item }: { item: SubCategoryItem }) => {
+//     const imageSource = getSubcategoryImage(item.SUBCATID, imageMappings.subcategories);
+    
+//     return (
+//       <TouchableOpacity 
+//         style={styles.card}
+//         activeOpacity={0.7}
+//         onPress={() => handleSubCategoryPress(item)}
+//       >
+//         <View style={styles.imageContainer}>
+//           <Image
+//             source={imageSource}
+//             style={styles.cardImage}
+//             resizeMode="contain"
+//             onError={(error) => {
+//               console.warn(`Failed to load image for subcategory ${item.SUBCATID}:`, error);
+//             }}
+//           />
+//         </View>
+//         <View style={styles.cardContent}>
+//           <Text style={styles.categoryCode}>{item.SUBCATCODE}</Text>
+//           <Text style={styles.categoryName} numberOfLines={2}>
+//             {item.SUBCATDESC}
+//           </Text>
+//         </View>
+//       </TouchableOpacity>
+//     );
+//   }, [handleSubCategoryPress, imageMappings.subcategories]);
+
+//   if (loading && !refreshing) {
+//     return (
+//       <View style={styles.centerContainer}>
+//         <ActivityIndicator size="large" color="#0000ff" />
+//       </View>
+//     );
+//   }
+
+//   return (
+//     <SafeAreaView style={styles.safeArea}>
+//       <FlatList
+//         data={subCategories}
+//         renderItem={renderSubCategoryItem}
+//         keyExtractor={(item) => item.SUBCATID}
+//         numColumns={2}
+//         contentContainerStyle={styles.listContainer}
+//         onRefresh={handleRefresh}
+//         refreshing={refreshing}
+//         ListEmptyComponent={() => (
+//           <View style={styles.centerContainer}>
+//             <Text style={styles.emptyText}>
+//               {error || 'No subcategories found'}
+//             </Text>
+//           </View>
+//         )}
+//       />
+//     </SafeAreaView>
+//   );
+// };
+
+
+// const styles = StyleSheet.create({
+//   safeArea: {
+//     flex: 1,
+//     backgroundColor: '#fff',
+//   },
+//   centerContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   listContainer: {
+//     padding: 10,
+//   },
+//   card: {
+//     flex: 1,
+//     margin: 5,
+//     borderRadius: 10,
+//     backgroundColor: '#fff',
+//     elevation: 3,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 3.84,
+//     maxWidth: (width - 30) / 2,
+//   },
+//   imageContainer: {
+//     height: 120,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: 10,
+//   },
+//   cardImage: {
+//     width: '100%',
+//     height: '100%',
+//   },
+//   cardContent: {
+//     padding: 10,
+//   },
+//   categoryCode: {
+//     fontSize: 12,
+//     color: '#666',
+//     marginBottom: 4,
+//   },
+//   categoryName: {
+//     fontSize: 14,
+//     fontWeight: 'bold',
+//     color: '#333',
+//   },
+//   emptyText: {
+//     fontSize: 16,
+//     color: '#666',
+//     textAlign: 'center',
+//   },
 // });
 
 // export default Category;
