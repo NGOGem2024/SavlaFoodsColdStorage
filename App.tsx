@@ -107,6 +107,7 @@ import ItemDetailScreen from './Frontend/Screens/ItemDetailScreen';
 import ItemDetailsExpanded from './Frontend/Screens/ItemDetailsExpanded';
 import LotReportScreen from './Frontend/Screens/LotReportScreen';
 import OtpVerification from './Frontend/Screens/OtpVerificationScreen';
+import PlaceOrderScreen from './Frontend/Screens/PlaceOrderScreen';
 import SplashScreen from './Frontend/Screens/SplashScreen';
 import StocksScreen from './Frontend/Screens/StocksScreen';
 import SubCategory from './Frontend/Screens/SubCategory';
@@ -128,11 +129,12 @@ export type RootStackParamList = {
   OrderPlacementScreen: undefined;
   ProductSearchScreen: undefined;
   SubCategory:  { category: string; categoryId: string }; 
-  ItemDetailsExpanded:{ItemID: number};
+  ItemDetailsExpanded:{ItemID: number, itemName:string};
   CartScreen: undefined;
   LotReportScreen: undefined;
   Announcement: undefined;
   BottomTabNavigator: undefined;
+  PlaceOrderScreen:undefined;
   ItemDetailScreen: {
     subcategoryId: string;
     subcategoryName: string;
@@ -158,7 +160,11 @@ const MainStackNavigator: React.FC = () => {
       <MainStack.Screen name="Invoices" component={InvoicesScreen} />
       <MainStack.Screen name="ProductSearchScreen" component={ProductSearchScreen} />
       <MainStack.Screen name="OrderPlacementScreen" component={OrderPlacementScreen} />
-      <MainStack.Screen name="SubCategory" component={SubCategory} />
+      <MainStack.Screen name="PlaceOrderScreen" component={PlaceOrderScreen} />
+      <MainStack.Screen name="SubCategory" component={SubCategory} 
+      options={({route}) => ({
+        title:route.params.category
+      })}/>
       <MainStack.Screen 
         name="ItemDetailScreen" 
         component={ItemDetailScreen}
@@ -169,8 +175,8 @@ const MainStackNavigator: React.FC = () => {
       <MainStack.Screen 
         name="ItemDetailsExpanded" 
         component={ItemDetailsExpanded}
-        options={({ route:ItemId}) => ({ 
-          title: 'Item Details'
+        options={({ route}) => ({ 
+          title: route.params.itemName
         })}
       />
       <MainStack.Screen name="CartScreen" component={CartScreen} />

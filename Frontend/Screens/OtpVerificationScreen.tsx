@@ -567,6 +567,32 @@ const OtpVerification: React.FC = () => {
   const [password, setPassword] = useState('');
   const navigation = useNavigation<OtpVerificationScreenNavigationProp>();
 
+  // const loginWithUsernameAndPassword = async () => {
+  //   try {
+  //     const response = await axios.post('http://192.168.1.3:3000/sf/getUserAccountID', {
+  //       sf_userName: username,
+  //       sf_userPwd: password
+  //     });
+
+  //     if (response.data && response.data.output) {
+  //       await AsyncStorage.setItem('userToken', response.data.output.token);
+  //       await AsyncStorage.setItem('customerID', response.data.output.CustomerID.toString());
+  //       await AsyncStorage.setItem("Disp_name", response.data.output.DisplayName);
+
+  //       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.output.token}`;
+  //       navigation.navigate('Main');
+  //     } else {
+  //       Alert.alert('Error', 'Invalid response from server');
+  //     }
+  //   } catch (error) {
+  //     if (axios.isAxiosError(error) && error.response) {
+  //       Alert.alert('Error', error.response.data.message || 'An error occurred');
+  //     } else {
+  //       Alert.alert('Error', 'An unexpected error occurred');
+  //     }
+  //   }
+  // };
+
   const loginWithUsernameAndPassword = async () => {
     try {
       const response = await axios.post('http://192.168.1.3:3000/sf/getUserAccountID', {
@@ -575,11 +601,17 @@ const OtpVerification: React.FC = () => {
       });
 
       if (response.data && response.data.output) {
-        await AsyncStorage.setItem('userToken', response.data.output.token);
-        await AsyncStorage.setItem('customerID', response.data.output.CustomerID.toString());
-        await AsyncStorage.setItem("Disp_name", response.data.output.DisplayName);
+        const { token, CustomerID, DisplayName, CustomerGroupID } = response.data.output;
+        
+        // Store all necessary data
+        await Promise.all([
+          AsyncStorage.setItem('userToken', token),
+          AsyncStorage.setItem('customerID', CustomerID.toString()),
+          AsyncStorage.setItem('Disp_name', DisplayName),
+          AsyncStorage.setItem('FK_CUST_GROUP_ID', CustomerGroupID.toString())
+        ]);
 
-        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.output.token}`;
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         navigation.navigate('Main');
       } else {
         Alert.alert('Error', 'Invalid response from server');
@@ -592,6 +624,7 @@ const OtpVerification: React.FC = () => {
       }
     }
   };
+
 
   axios.interceptors.request.use(
     async (config) => {

@@ -520,6 +520,7 @@ import { useDisplayName } from "./contexts/DisplayNameContext";
 
 
 
+
 const BACKEND_URL = "http://192.168.1.3:3000";
 
 type HomeScreenRouteProp = RouteProp<RootStackParamList, "HomeScreen">;
@@ -674,7 +675,7 @@ const HomeScreen: React.FC = () => {
           onPress={() =>
             navigation.navigate("SubCategory", {
               category: item.CATDESC,
-              categoryId: item.CATID,
+              categoryId: item.CATID,              
             })
           }
         >

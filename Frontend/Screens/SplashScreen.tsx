@@ -11,7 +11,7 @@ const SplashScreen: React.FC = () => {
     const timer = setTimeout(() => {
       navigation.navigate('OtpVerificationScreen');
        
-    }, 3000);           
+    }, 1000);           
     return () => clearTimeout(timer);
   }, [navigation]);
 
