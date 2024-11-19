@@ -8,152 +8,126 @@ const db = require('../config/database');
 const JWT_SECRET = process.env.JWT_SECRET || 'JhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ';
 
 const authController = {
-  getUserAccountID: async (req, res) => {
-    const { sf_userName, sf_userPwd } = req.body;
-    
-    if (!sf_userName || !sf_userPwd) {
-      return res.status(400).json({ 
-        message: 'Username and password are required',
-        debug: { provided: { username: !!sf_userName, password: !!sf_userPwd }}
+// getUserAccountID with customer group information
+ async getUserAccountID (req, res) {
+  const { sf_userName, sf_userPwd } = req.body;
+  
+  if (!sf_userName || !sf_userPwd) {
+    return res.status(400).json({ 
+      message: 'Username and password are required',
+      debug: { provided: { username: !!sf_userName, password: !!sf_userPwd }}
+    });
+  }
+  
+  try {
+    const userCheck = await db.execute(
+      `SELECT DISTINCT
+        CL.FK_CUSTOMER_ID, 
+        CL.MOBILE_NO, 
+        CL.PASSWORD, 
+        CL.FK_CUST_GROUP_ID,
+        C.DISP_NAME  
+       FROM CUSTOMER_LOGIN CL
+       JOIN CUSTOMER C ON CL.FK_CUSTOMER_ID = C.CUSTOMER_ID
+       WHERE UPPER(CL.USERNAME) = UPPER(:sf_userName)`,
+      { sf_userName: sf_userName.trim() },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    if (!userCheck.rows || userCheck.rows.length === 0) {
+      return res.status(401).json({ 
+        message: 'Invalid credentials',
+        debug: 'Username not found'
       });
     }
-    
-    try {
-      const userCheck = await db.execute(
-        `SELECT CL.FK_CUSTOMER_ID, CL.MOBILE_NO, CL.PASSWORD, C.DISP_NAME  
-         FROM CUSTOMER_LOGIN CL
-         JOIN CUSTOMER C ON CL.FK_CUSTOMER_ID = C.CUSTOMER_ID
-         WHERE UPPER(CL.USERNAME) = UPPER(:sf_userName)`,
-        { sf_userName: sf_userName.trim() },
-        { outFormat: oracledb.OUT_FORMAT_OBJECT }
-      );
 
-      if (!userCheck.rows || userCheck.rows.length === 0) {
-        return res.status(401).json({ 
-          message: 'Invalid credentials',
-          debug: 'Username not found'
-        });
-      }
-
-      const user = userCheck.rows[0];
-      if (user.PASSWORD !== sf_userPwd) {
-        return res.status(401).json({ 
-          message: 'Invalid credentials',
-          debug: 'Password mismatch'
-        });
-      }
-
-      const token = jwt.sign(
-        { 
-          customerId: user.FK_CUSTOMER_ID,
-          username: sf_userName,
-          displayName: user.DISP_NAME
-        },
-        JWT_SECRET,
-        { expiresIn: '24h' }
-      );
-
-      res.json({
-        input: { sf_userName },
-        output: {
-          CustomerID: user.FK_CUSTOMER_ID,
-          PhoneNo: user.MOBILE_NO,
-          DisplayName: user.DISP_NAME,
-          token: token
-        }
-      });
-      
-    } catch (error) {
-      console.error('Database error:', error);
-      res.status(500).json({ 
-        message: 'Server error',
-        debug: error.message 
+    const user = userCheck.rows[0];
+    if (user.PASSWORD !== sf_userPwd) {
+      return res.status(401).json({ 
+        message: 'Invalid credentials',
+        debug: 'Password mismatch'
       });
     }
+
+    const token = jwt.sign(
+      { 
+        customerId: user.FK_CUSTOMER_ID,
+        username: sf_userName,
+        displayName: user.DISP_NAME,
+        customerGroupId: user.FK_CUST_GROUP_ID
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      input: { sf_userName },
+      output: {
+        CustomerID: user.FK_CUSTOMER_ID,
+        PhoneNo: user.MOBILE_NO,
+        DisplayName: user.DISP_NAME,
+        CustomerGroupID: user.FK_CUST_GROUP_ID,
+        token: token
+      }
+    });
+    
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ 
+      message: 'Server error',
+      debug: error.message
+    });
+  }
+},
+
+async  listAccounts(req, res) {
+  const { FK_CUST_GROUP_ID } = req.body;
+  
+  if (!FK_CUST_GROUP_ID) {
+    return res.status(400).json({ 
+      message: 'Customer Group ID is required',
+      debug: { provided: { customerGroupId: !!FK_CUST_GROUP_ID }}
+    });
+  }
+  
+  try {
+    const query = await db.execute(
+      `SELECT DISTINCT 
+        cg.FK_CUSTOMER_ID,
+        cg.DISP_NAME,
+        cg.DEF,
+        cg.FK_CUST_GROUP_ID
+       FROM CUST_GROUP cg
+       WHERE cg.FK_CUST_GROUP_ID = :FK_CUST_GROUP_ID
+       ORDER BY cg.DISP_NAME`,
+      { FK_CUST_GROUP_ID },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    const groups = query.rows || [];
+    
+    res.json({
+      input: { FK_CUST_GROUP_ID },
+      output: {
+        count: groups.length,
+        groups: groups.map(row => ({
+          FK_CUSTOMER_ID: row.FK_CUSTOMER_ID,
+          DISP_NAME: row.DISP_NAME,
+          DEF: row.DEF,
+          FK_CUST_GROUP_ID: row.FK_CUST_GROUP_ID
+        }))
+      }
+    });
+    
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ 
+      message: 'Server error',
+      debug: error.message
+    });
+  }
   },
-  //  async getItemCatSubCat  (req, res) {
-  //   const { CustomerID } = req.body;
-  //   const { displayName } = req.user; // Get displayName from the authenticated user
-    
-  //   if (!CustomerID) {
-  //     return res.status(400).json({ 
-  //       message: 'CustomerID is required'
-  //     });
-  //   }
   
-  //   try {
-  //     // First verify if the customer exists
-  //     const customerCheck = await db.execute(
-  //       `SELECT CL.FK_CUSTOMER_ID 
-  //        FROM CUSTOMER_LOGIN CL
-  //        JOIN CUSTOMER C ON CL.FK_CUSTOMER_ID = C.CUSTOMER_ID
-  //        WHERE CL.FK_CUSTOMER_ID = :CustomerID`,
-  //       { CustomerID },
-  //       { outFormat: oracledb.OUT_FORMAT_OBJECT }
-  //     );
-  
-  //     if (customerCheck.rows.length === 0) {
-  //       return res.status(404).json({ 
-  //         message: 'Customer not found',
-  //         debug: `No customer found with ID: ${CustomerID}`
-  //       });
-  //     }
-  
-  //     // Get categories and subcategories for the specific customer
-  //     const result = await db.execute(
-  //       `SELECT 
-  //         ICS.ITEM_CATEG_ID AS CATID,
-  //         ICS.ITEM_CATEG_CODE AS CATCODE,
-  //         ICS.ITEM_CATEG_NAME AS CATDESC,
-  //         ICS.ITEM_SUB_CATEGORY_ID AS SUBCATID,
-  //         ICS.SUB_CATEGORY_CODE AS SUBCATCODE,
-  //         ICS.SUB_CATEGORY_NAME AS SUBCATDESC,          
-  //         CONCAT('C', ICS.ITEM_CATEG_ID, '.jpg') AS CATEGORY_IMAGE_NAME,
-  //         CONCAT('SC', ICS.ITEM_SUB_CATEGORY_ID, '.jpg') AS SUBCATEGORY_IMAGE_NAME
-  //       FROM 
-  //         ITEMCAT_SUBCAT ICS
-  //       INNER JOIN 
-  //         CUSTOMER_LOGIN CL ON ICS.FK_CUSTOMER_ID = CL.FK_CUSTOMER_ID
-  //       WHERE 
-  //         CL.FK_CUSTOMER_ID = :CustomerID
-  //       ORDER BY 
-  //         ICS.ITEM_CATEG_ID, 
-  //         ICS.ITEM_SUB_CATEGORY_ID`,
-  //       { CustomerID },
-  //       { outFormat: oracledb.OUT_FORMAT_OBJECT }
-  //     );
-  
-  //     if (result.rows && result.rows.length > 0) {
-
-  //       const transformedRows = result.rows.map(row => ({
-  //         ...row,
-  //         categoryImage: `C${row.CATID}.jpg`,
-  //         subcategoryImage: `SC${row.SUBCATID}.jpg`
-  //       }));
-        
-  //       res.json({
-  //         input: { 
-  //           CustomerID, 
-  //           displayName 
-  //         },
-  //         output: result.rows
-  //       });
-  //     } else {
-  //       res.status(404).json({ 
-  //         message: 'No item categories or subcategories found for this customer',
-  //         debug: `No data found for CustomerID: ${CustomerID}`
-  //       });
-  //     }
-  
-  //   } catch (error) {
-  //     console.error('Database error:', error);
-  //     res.status(500).json({ 
-  //       message: 'Server error',
-  //       debug: error.message 
-  //     });
-  //   }
-  // },
-
   
 async getItemCatSubCat(req, res) {
   const { CustomerID } = req.body;
@@ -262,45 +236,6 @@ async getItemCatSubCat(req, res) {
       res.status(500).json({ message: 'Server error', error: error.message });
     }
   },
-//   async  getItemsBySubCategory(req, res) {
-//     const { subcategoryId } = req.body;
-
-//     try {
-//         const itemsResult = await db.execute(
-//             `SELECT 
-//                 ITEM_ID AS "ITEM_ID",
-//                 ITEM_CODE AS "ITEM_CODE",
-//                 DESCRIPTION AS "DESCRIPTION",
-//                 ITEM_NAME AS "ITEM_NAME"
-//             FROM LISTOFITEMS 
-//             WHERE ITEM_SUB_CATEGORY_ID = :subcategoryId
-//             ORDER BY ITEM_ID`,
-//             { subcategoryId },
-//             { outFormat: oracledb.OUT_FORMAT_OBJECT }
-//         );
-
-//         if (itemsResult.rows.length === 0) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: 'No items found for this subcategory'
-//             });
-//         }
-
-//         res.json({
-//             success: true,
-//             data: itemsResult.rows
-//         });
-        
-
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Server error',
-//             error: error.message
-//         });
-//     }
-// },
 
   getItemDetailsWithStock: async (req, res) => {
     const { ItemID } = req.body;
@@ -385,174 +320,3 @@ async getItemCatSubCat(req, res) {
 
 module.exports = authController;
 
-
-// const oracledb = require('oracledb');
-// const db = require('../config/database');
-// const jwt = require('jsonwebtoken');
-// const bcrypt = require('bcrypt');
-// const path = require('path');
-
-// const authController = {
-//   async getUserAccountID(req, res) {
-//     const { sf_userName, sf_userPwd } = req.body;
-    
-//     try {
-//       const result = await db.execute(
-//         `SELECT FK_CUSTOMER_ID, PASSWORD
-//          FROM CUSTOMER_LOGIN
-//          WHERE USERNAME = :sf_userName`,
-//         { sf_userName },
-//         { outFormat: oracledb.OUT_FORMAT_OBJECT }
-//       );
-      
-//       if (result.rows && result.rows.length > 0) {
-//         const { FK_CUSTOMER_ID, PASSWORD } = result.rows[0];
-        
-//         // Compare the provided password with the stored hash
-//         const isMatch = await bcrypt.compare(sf_userPwd, PASSWORD);
-        
-//         if (isMatch) {
-//           // Generate JWT token
-//           const token = jwt.sign(
-//             { userId: FK_CUSTOMER_ID },
-//             process.env.JWT_SECRET,
-//             { expiresIn: '1h' }
-//           );
-          
-//           res.json({
-//             message: 'Login successful',
-//             token,
-//             CustomerID: FK_CUSTOMER_ID
-//           });
-//         } else {
-//           res.status(401).json({ message: 'Invalid credentials' });
-//         }
-//       } else {
-//         res.status(401).json({ message: 'Invalid credentials' });
-//       }
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({ message: 'Server error' });
-//     }
-//   },
-
-
-//  async getCustomerID (req, res) {
-//     try {
-//       // This is a placeholder query. You'll need to replace it with your actual logic
-//       // to retrieve or generate a CustomerID
-//       const result = await db.execute(
-//         `SELECT CUSTOMER_ID FROM CUSTOMERS WHERE ROWNUM = 1`,
-//         [],
-//         { outFormat: oracledb.OUT_FORMAT_OBJECT }
-//       );
-  
-//       if (result.rows && result.rows.length > 0) {
-//         res.json({ customerID: result.rows[0].CUSTOMER_ID });
-//       } else {
-//         res.status(404).json({ message: 'No CustomerID found' });
-//       }
-//     } catch (error) {
-//       console.error('Error fetching CustomerID:', error);
-//       res.status(500).json({ message: 'Server error', error: error.message });
-//     }
-//  },
-  
- 
-//   async imageName (req, res) {
-//   try {
-//     const imageDirectory = path.join(__dirname, '..', 'public', 'assets');
-//     const files = await fs.readdir(imageDirectory);
-//     const matchingFile = files.find(file => file.startsWith(req.params.imageName));
-    
-//     if (matchingFile) {
-//       res.sendFile(path.join(imageDirectory, matchingFile));
-//     } else {
-//       res.status(404).send('Image not found');
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send('Server error');
-//   }
-// },
-
-
-// async getItemCatSubCat(req, res) {
-//   const { CustomerID } = req.body;
-//   if (!CustomerID) {
-//     return res.status(400).json({ message: 'CustomerID is required' });
-//   }
-
-//   try {
-//     console.log('Received request for CustomerID:', CustomerID);
-
-//     const connection = await oracledb.getConnection();
-    
-//     const result = await connection.execute(
-//       `SELECT DISTINCT
-//          ITEM_CATEG_ID AS CATID,
-//          ITEM_CATEG_CODE AS CATCODE,
-//          ITEM_CATEG_NAME AS CATDESC,
-//          CAT_IMGFILE
-//        FROM ITEMCAT_SUBCAT
-//        WHERE ITEM_CATEG_ID IN (
-//          SELECT DISTINCT FK_ITEM_CATEG_ID
-//          FROM CUSTOMER_PRICE_LIST
-//          WHERE FK_CUSTOMER_ID = :CustomerID
-//        )`,
-//       { CustomerID },
-//       { outFormat: oracledb.OUT_FORMAT_OBJECT }
-//     );
-
-//     await connection.close();
-
-//     console.log('Query result:', result);
-
-//     if (result.rows && result.rows.length > 0) {
-//       const processedRows = result.rows.map(row => ({
-//         ...row,
-//         imageUrl: row.CAT_IMGFILE ? `/api/image/${row.CAT_IMGFILE}` : null
-//       }));
-
-//       res.json({
-//         input: { CustomerID },
-//         output: processedRows
-//       });
-//     } else {
-//       res.status(404).json({ message: 'No item categories found for this customer' });
-//     }
-//   } catch (error) {
-//     console.error('Error in getItemCatSubCat:', error);
-//     res.status(500).json({ message: 'Server error', error: error.message });
-//   }
-// },
-
-// async serveImage(req, res) {
-//   const imageName = req.params.imageName;
-//   const imageDirectory = path.join(__dirname, '..', 'public', 'assets', 'category_images');
-  
-//   try {
-//     const files = await fs.readdir(imageDirectory);
-//     const matchingFile = files.find(file => file.startsWith(imageName));
-    
-//     if (matchingFile) {
-//       res.sendFile(path.join(imageDirectory, matchingFile));
-//     } else {
-//       res.status(404).send('Image not found');
-//     }
-//   } catch (error) {
-//     console.error('Error serving image:', error);
-//     res.status(500).send('Server error');
-//   }
-// },
-//   // Add missing methods
-//   async getItemsBySubCategory(req, res) {
-//     // Implement the method logic
-//   },
-
-//   async getItemDetailsWithStock(req, res) {
-//     // Implement the method logic
-//   }
-// };
-
-// module.exports = authController;
