@@ -1649,26 +1649,24 @@
 //nandini
 import { NavigationProp, RouteProp } from "@react-navigation/native";
 import axios from "axios";
-import { CreditCard, Grid, Search, MoreVertical } from "lucide-react-native";
+import { CreditCard, Grid, MoreVertical, Search } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Animated,
-  Modal,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  Button,
+  View
 } from "react-native";
-import { RootStackParamList } from "../../App";
+import { MainStackParamList } from "../../App";
 import QuantitySelectModal from './QuantitySelectorModal';
 
-const BACKEND_URL = "http://192.168.1.17:3000/sf";
+const BACKEND_URL = "http://192.168.0.102:3000/sf";
 
 // Keep existing interfaces
 interface ItemDetails {
@@ -1709,10 +1707,10 @@ interface APIResponse {
 }
 
 type ItemDetailsExpandedRouteProp = RouteProp<
-  RootStackParamList,
+  MainStackParamList,
   "ItemDetailsExpanded"
 >;
-type ItemDetailsExpandedNavigationProp = NavigationProp<RootStackParamList>;
+type ItemDetailsExpandedNavigationProp = NavigationProp<MainStackParamList>;
 
 interface ItemDetailsExpandedProps {
   route: ItemDetailsExpandedRouteProp;
@@ -1796,7 +1794,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
     try {
       const { ItemID } = route.params;
       const response = await axios.post<APIResponse>(
-        `${BACKEND_URL}/getItemDetailsWithStock,
+        `${BACKEND_URL}/getItemDetailsWithStock`,
         { ItemID },
         {
           headers: {
@@ -1804,7 +1802,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
             Accept: "application/json",
           },
           timeout: 10000,
-        }`
+        }
       );
       console.log("Response received:", response.data);
 
@@ -2388,7 +2386,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F48221",
     borderRadius: 4, // Reduced from 6
     padding: 6, // Reduced from 8
-    width: "20%", // Reduced from 40%
+    width: "30%", // Reduced from 40%
   },
   lotNoValue: {
     color: "#FFFFFF",

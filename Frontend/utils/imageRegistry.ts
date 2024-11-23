@@ -34,17 +34,16 @@ class ImageRegistry {
 
   private constructor() {
     // Initialize category images
-    const categoryImages = {
-      'C1': require('../../assets/images/categories/C1.jpg'),
+    const categoryImages = {      
       'C6': require('../../assets/images/categories/C6.jpg'),
       'C7': require('../../assets/images/categories/C7.jpg'),
       'C10': require('../../assets/images/categories/C10.jpg'),
       'C12': require('../../assets/images/categories/C12.jpg'),
+      'C1': require('../../assets/images/categories/C1.jpg'),
     };
 
     // Initialize subcategory images
-    const subcategoryImages = {
-      'SC1': require('../../assets/images/subcategories/SC1.jpg'),
+    const subcategoryImages = {'SC1': require('../../assets/images/subcategories/SC1.jpg'),
       'SC2': require('../../assets/images/subcategories/SC2.jpg'),
       'SC4': require('../../assets/images/subcategories/SC4.jpg'),
       'SC5': require('../../assets/images/subcategories/SC5.jpg'),
@@ -63,7 +62,26 @@ class ImageRegistry {
       'SC29': require('../../assets/images/subcategories/SC29.jpg'),
       'SC31': require('../../assets/images/subcategories/SC31.jpg'),
       'SC32': require('../../assets/images/subcategories/SC32.jpg'),
-      'SC35': require('../../assets/images/subcategories/SC35.jpg'),
+      'SC35': require('../../assets/images/subcategories/SC35.jpg'),      
+      'SC108':require('../../assets/images/subcategories/SC108.jpg'),
+     'SC110':require('../../assets/images/subcategories/SC110.jpg'),
+      'SC111':require('../../assets/images/subcategories/SC111.jpg'),
+      'SC112':require('../../assets/images/subcategories/SC112.jpg'),
+      'SC113':require('../../assets/images/subcategories/SC113.jpg'),
+      'SC114':require('../../assets/images/subcategories/SC114.jpg'),
+      'SC115':require('../../assets/images/subcategories/SC115.jpg'),
+      'SC118':require('../../assets/images/subcategories/SC118.jpg'),
+      'SC116':require('../../assets/images/subcategories/SC116.jpg'),
+      'SC119':require('../../assets/images/subcategories/SC119.jpg'),
+      'SC120':require('../../assets/images/subcategories/SC120.jpg'),
+      'SC121':require('../../assets/images/subcategories/SC121.jpg'),
+      'SC122':require('../../assets/images/subcategories/SC122.jpg'),
+      'SC123':require('../../assets/images/subcategories/SC123.jpg'),
+      'SC163':require('../../assets/images/subcategories/SC163.jpg'),
+      'SC166':require('../../assets/images/subcategories/SC166.jpg'),
+      // 'SC123':require('../../assets/images/subcategories/SC123.jpg'),
+      // 'SC123':require('../../assets/images/subcategories/SC123.jpg'),
+      // 'SC123':require('../../assets/images/subcategories/SC123.jpg'),
 
     };
 
@@ -112,7 +130,7 @@ class ImageRegistry {
       }
     }
     
-    return require('../../assets/images/default.jpg');
+    return null; // This is the problem
   }
 
   public getSubcategoryImage(subcategoryId: string): any {
@@ -126,11 +144,14 @@ class ImageRegistry {
       }
     }
     
-    return require('../../assets/images/default.jpg');
+    return null; // Return null instead of default image
   }
 
+
   public getLocalImageMappings(): ImageResponse {
+    // Only include categories that exist in the cache
     const categories: ImageMapping[] = Array.from(this.categoryImageCache.entries())
+      .filter(([key, value]) => value !== null && value.type === 'local') 
       .map(([key, value]) => ({
         id: key.replace('C', ''),
         imageUrl: `../../assets/images/categories/${key}.jpg`
@@ -171,22 +192,70 @@ export const formatImageName = (id: string, isCategory: boolean = true): string 
   return `${prefix}${id}.jpg`;
 };
 
+// export const formatCategories = (categories: any[]): CategoryImage[] => {
+//   return categories.map(category => ({
+//     id: category.CATID,
+//     code: category.CATCODE,
+//     description: category.CATDESC,
+//     imageUrl: formatImageName(category.CATID, true)
+//   }));
+// };
+
+// export const formatSubCategories = (subcategories: any[]): SubCategoryImage[] => {
+//   return subcategories.map(subcategory => ({
+//     id: subcategory.SUBCATID,
+//     code: subcategory.SUBCATCODE,
+//     description: subcategory.SUBCATDESC,
+//     imageUrl: formatImageName(subcategory.SUBCATID, false),
+//     parentCategoryId: subcategory.CATID
+//   }));
+// };
+ 
+
 export const formatCategories = (categories: any[]): CategoryImage[] => {
-  return categories.map(category => ({
-    id: category.CATID,
-    code: category.CATCODE,
-    description: category.CATDESC,
-    imageUrl: formatImageName(category.CATID, true)
-  }));
+  return categories
+    .map(category => {
+      const image = ImageRegistry.getInstance().getCategoryImage(category.CATID);
+      if (!image) return null; // Skip categories without images
+      
+      return {
+        id: category.CATID,
+        code: category.CATCODE,
+        description: category.CATDESC,
+        imageUrl: formatImageName(category.CATID, true)
+      };
+    })
+    .filter((category): category is CategoryImage => category !== null); // Type guard to remove null values
 };
 
 export const formatSubCategories = (subcategories: any[]): SubCategoryImage[] => {
-  return subcategories.map(subcategory => ({
-    id: subcategory.SUBCATID,
-    code: subcategory.SUBCATCODE,
-    description: subcategory.SUBCATDESC,
-    imageUrl: formatImageName(subcategory.SUBCATID, false),
-    parentCategoryId: subcategory.CATID
-  }));
+  return subcategories
+    .map((subcategory) => {
+      try {
+        // Get the image and check if it exists
+        const imageRegistry = ImageRegistry.getInstance();
+        const image = imageRegistry.getSubcategoryImage(subcategory.SUBCATID);
+        
+        // If no image is found, skip this subcategory
+        if (!image) {
+          console.log(`No image found for subcategory ${subcategory.SUBCATID}`);
+          return null;
+        }
+
+        // If image exists, return the formatted subcategory
+        const formattedSubCategory: SubCategoryImage = {
+          id: subcategory.SUBCATID,
+          code: subcategory.SUBCATCODE,
+          description: subcategory.SUBCATDESC,
+          imageUrl: formatImageName(subcategory.SUBCATID, false),
+          parentCategoryId: subcategory.CATID
+        };
+
+        return formattedSubCategory;
+      } catch (error) {
+        console.error(`Error formatting subcategory ${subcategory.SUBCATID}:`, error);
+        return null;
+      }
+    })
+    .filter((subcategory): subcategory is SubCategoryImage => subcategory !== null);
 };
- 
