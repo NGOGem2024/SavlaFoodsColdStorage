@@ -29,10 +29,7 @@ import Header from "./Header"; // Update path as needed
 import { useCart } from "./contexts/CartContext";
 import { useDisplayName } from "./contexts/DisplayNameContext";
 
-
-
-
-const BACKEND_URL = "http://192.168.0.102:3000";
+const BACKEND_URL = "http://192.168.1.3:3000";
 
 interface HomeScreenParams {
   initialLogin?: boolean;
@@ -55,7 +52,7 @@ type CategoryItem = {
 };
 
 const { width } = Dimensions.get("window");
-const BASE_IMAGE_PATH = 'http://192.168.0.102:3000/assets/images'; // Adjust this to your image server path
+const BASE_IMAGE_PATH = 'http://192.168.1.3:3000/assets/images'; // Adjust this to your image server path
 // const imageService = ImageService.getInstance();
 
 
@@ -233,7 +230,7 @@ const HomeScreen: React.FC = () => {
           setCustomerID(id);
           await AsyncStorage.setItem("customerID", id);
         } else {
-          const response = await axios.get("http://192.168.0.102/getCustomerID");
+          const response = await axios.get("http://192.168.1.3/getCustomerID");
           id = response.data.customerID;
           setCustomerID(id);
           await AsyncStorage.setItem("customerID", id || "");
@@ -245,59 +242,6 @@ const HomeScreen: React.FC = () => {
 
     fetchCustomerID();
   }, [route.params]);
-
-  // useEffect(() => {
-  //   if (CustomerID) {
-  //     fetchCategories();
-  //   }
-  // }, [CustomerID]);
-
-
-
-  // const fetchCategories = useCallback(async () => {
-  //   if (!CustomerID) {
-  //     console.log("CustomerID is not set");
-  //     return;
-  //   }
-
-  //   try {
-  //     const response = await axios.post(
-  //       `${BACKEND_URL}/sf/getItemCatSubCat`,
-  //       {
-  //         CustomerID: CustomerID,
-  //       },
-  //       {
-  //         timeout: 10000,
-  //       }
-  //     );
-
-  //     if (response.data && response.data.output) {
-  //       const uniqueCategories = response.data.output.reduce(
-  //         (acc: CategoryItem[], current: CategoryItem) => {
-  //           const x = acc.find((item) => item.CATID === current.CATID);
-  //           if (!x) {
-  //             // Format the image name using the CATID
-  //             const formattedCategory = {
-  //               ...current,
-  //               categoryImage: formatImageName(current.CATID, true),
-  //               imageUrl: getCategoryImage(current.CATID)
-  //             };
-  //             return acc.concat([formattedCategory]);
-  //           }
-  //           return acc;
-  //         },
-  //         []
-  //       );
-
-  //       setCategories(uniqueCategories);
-  //       setFilteredCategories(uniqueCategories);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching categories:", error);
-  //   }
-  // }, [CustomerID]);
-
-// Clear categories when switching accounts
 useEffect(() => {
   if (route.params?.switchedAccount) {
     setCategories([]);
@@ -334,51 +278,6 @@ useEffect(() => {
 
   fetchCustomerID();
 }, [route.params?.switchedAccount, route.params?.newCustomerId]);
-
-// Fetch categories whenever CustomerID changes
-// const fetchCategories = useCallback(async () => {
-//   if (!CustomerID) return;
-
-//   try {
-//     setCategories([]); // Clear existing categories
-//     setFilteredCategories([]); // Clear filtered categories
-
-//     const response = await axios.post(
-//       `${BACKEND_URL}/sf/getItemCatSubCat`,
-//       { CustomerID },
-//       { timeout: 10000 }
-//     );
-
-//     if (response.data?.output) {
-//       const uniqueCategories = response.data.output.reduce(
-//         (acc: CategoryItem[], current: CategoryItem) => {
-//           const exists = acc.find((item) => item.CATID === current.CATID);
-//           if (!exists) {
-//             return [...acc, {
-//               ...current,
-//               categoryImage: formatImageName(current.CATID, true),
-//               imageUrl: getCategoryImage(current.CATID)
-//             }];
-//           }
-//           return acc;
-//         },
-//         []
-//       );
-
-//       setCategories(uniqueCategories);
-//       setFilteredCategories(uniqueCategories);
-//     }
-//   } catch (error) {
-//     console.error("Error fetching categories:", error);
-//     Alert.alert("Error", "Failed to fetch categories");
-//   }
-// }, [CustomerID]);
-
-// useEffect(() => {
-//   if (CustomerID) {
-//     fetchCategories();
-//   }
-// }, [CustomerID, fetchCategories]);
 
   const renderCardItem = useCallback(
     ({ item }: { item: CategoryItem }) => {

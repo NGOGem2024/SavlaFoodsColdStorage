@@ -20,7 +20,7 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { RootStackParamList } from "../type/types";
 import { useDisplayName } from "./contexts/DisplayNameContext";
 
-const BACKEND_URL = "http://192.168.0.102:3000";
+const BACKEND_URL = "http://192.168.1.3:3000";
 
 interface ProfileMenuProps {
   displayName: string | null;

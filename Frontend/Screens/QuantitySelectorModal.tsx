@@ -1,13 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import React, { useEffect, useState } from 'react';
 import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  StyleSheet,
   Alert,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { MainStackParamList } from '../../App'; // Import the types
+
+const BACKEND_URL = "http://192.168.1.3:3000";
+
+type PlaceOrderScreenNavigationProp = StackNavigationProp<
+  MainStackParamList,
+  'PlaceOrderScreen'
+>;
 
 interface StockDetails {
   LOT_NO: string | null;
@@ -32,6 +42,7 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
   onConfirm,
 }) => {
   const [inputValue, setInputValue] = useState('1');
+  const navigation = useNavigation<PlaceOrderScreenNavigationProp>();
   
   // Find the selected stock detail based on lot number
   const selectedStock = stockDetails.find(stock => stock.LOT_NO === selectedLotNo);
@@ -118,8 +129,9 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
     console.log('Adding to cart:', {
       lotNo: selectedLotNo,
       quantity: quantity
-    });
+    });    
     onConfirm(quantity);
+    navigation.navigate('PlaceOrderScreen');
   };
 
   return (
@@ -195,7 +207,16 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
   );
 };
 
+ 
+
 const styles = StyleSheet.create({
+  disabledButton: {
+    backgroundColor: '#cccccc',
+  },
+  disabledInput: {
+    backgroundColor: '#f5f5f5',
+    color: '#666666',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
