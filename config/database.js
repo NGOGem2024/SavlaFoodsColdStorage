@@ -74,5 +74,16 @@ async function execute(sql, binds = {}, options = {}) {
   }
 }
 
+async function getConnection() {
+  try {
+    console.log('Attempting to get connection from pool...');
+    const connection = await pool.getConnection();
+    console.log('Connection acquired successfully');
+    return connection;
+  } catch (err) {
+    console.error('Failed to get connection:', err);
+    throw err;
+  }
+}
 // Export oracledb along with other functions
-module.exports = { initialize, close, execute, validateConfig, oracledb };
+module.exports = { initialize, close, execute, validateConfig, oracledb,getConnection };
