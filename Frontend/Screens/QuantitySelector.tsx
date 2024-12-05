@@ -3,50 +3,45 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { MainStackParamList } from '../../App'; // Import the types
+import { MainStackParamList } from '../../App';
 
-const BACKEND_URL = "http://192.168.1.3:3000";
-
-type PlaceOrderScreenNavigationProp = StackNavigationProp<
-  MainStackParamList,
-  'PlaceOrderScreen'
->;
-
-interface StockDetails {
-  LOT_NO: string | null;
-  AVAILABLE_QTY: number | null;
+export interface Item {
+  item_id: number | string;
+  item_name: string;
+  lot_no: string;
+  available_qty: number;
+  unit_name: string;
+  price?: number;
+  description?: string;
+  item_marks?: string;
+  vakal_no?: string;
 }
 
 interface QuantitySelectorModalProps {
   isVisible: boolean;
-  selectedLotNo: string | null;
-  stockDetails: StockDetails[];
-  itemName: string;
+  item: Item;
   onClose: () => void;
   onConfirm: (quantity: number) => void;
 }
 
-const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
+const QuantitySelector: React.FC<QuantitySelectorModalProps> = ({
   isVisible,
-  selectedLotNo,
-  stockDetails,
-  itemName,
+  item,
   onClose,
   onConfirm,
 }) => {
+  const navigation = useNavigation<StackNavigationProp<MainStackParamList>>();
   const [inputValue, setInputValue] = useState('1');
-  const navigation = useNavigation<PlaceOrderScreenNavigationProp>();
-  
-  // Find the selected stock detail based on lot number
-  const selectedStock = stockDetails.find(stock => stock.LOT_NO === selectedLotNo);
-  const maxQuantity = selectedStock?.AVAILABLE_QTY || 0;
+  const maxQuantity = item.available_qty;
 
   // Reset quantity when modal opens
   useEffect(() => {
@@ -54,17 +49,11 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
       setInputValue('1');
     }
   }, [isVisible]);
-  
-  const validateAndUpdateQuantity = (value: string) => {
-    // Allow empty string for deletion
-    if (value === '') {
-      setInputValue('');
-      return;
-    }
 
+  const validateAndUpdateQuantity = (value: string) => {
     // Remove any non-numeric characters
     const cleanedValue = value.replace(/[^0-9]/g, '');
-    
+   
     // Handle empty or zero cases
     if (cleanedValue === '' || cleanedValue === '0') {
       setInputValue('');
@@ -72,7 +61,7 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
     }
 
     const numValue = parseInt(cleanedValue);
-    
+   
     // If the number is greater than max quantity, set to max
     if (numValue > maxQuantity) {
       setInputValue(maxQuantity.toString());
@@ -82,7 +71,7 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
       );
       return;
     }
-    
+   
     // Update with the cleaned value
     setInputValue(cleanedValue);
   };
@@ -108,7 +97,7 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
 
   const handleConfirm = () => {
     const quantity = parseInt(inputValue) || 0;
-    
+   
     if (quantity <= 0) {
       Alert.alert(
         'Invalid Quantity',
@@ -126,41 +115,54 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
       return;
     }
 
-    console.log('Adding to cart:', {
-      lotNo: selectedLotNo,
-      quantity: quantity
-    });    
-    onConfirm(quantity);
-    navigation.navigate('PlaceOrderScreen');
+    // Navigate to Order Confirmation Screen with the selected item details
+    navigation.navigate('OrderConfirmation', {
+      orderDetails: [{
+        itemId: item.item_id,
+        lotNo: item.lot_no,
+        quantity: quantity
+      }]
+    });
+
+    // Close the modal
+    onClose();
   };
 
-  return (
+   return (
     <Modal
       transparent={true}
       visible={isVisible}
       onRequestClose={onClose}
       animationType="fade"
     >
-      <View style={styles.modalOverlay}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.modalOverlay}
+      >
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Select Quantity</Text>
+         
           <View style={styles.itemInfo}>
             <Text style={styles.modalItemDetail}>
-              Lot No: <Text style={styles.modalItemDetail1}>{selectedLotNo || 'N/A'}</Text>
+              Item: <Text style={styles.modalItemDetail1}>{item.item_name}</Text>
             </Text>
             <Text style={styles.modalItemDetail}>
-              Available Quantity: <Text style={styles.modalItemDetail1}>{maxQuantity || 'N/A'}</Text> 
+              Lot No: <Text style={styles.modalItemDetail1}>{item.lot_no}</Text>
+            </Text>
+            <Text style={styles.modalItemDetail}>
+              Available Quantity: <Text style={styles.modalItemDetail1}>{maxQuantity} {item.unit_name}</Text>
             </Text>
           </View>
 
           <View style={styles.quantitySelector}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[
                 styles.quantityButton,
                 (!inputValue || parseInt(inputValue) <= 1) && styles.quantityButtonDisabled
               ]}
               onPress={decrementQuantity}
               disabled={!inputValue || parseInt(inputValue) <= 1}
+              accessibilityLabel="Decrease Quantity"
             >
               <Text style={styles.quantityButtonText}>-</Text>
             </TouchableOpacity>
@@ -170,53 +172,48 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
               keyboardType="numeric"
               value={inputValue}
               onChangeText={validateAndUpdateQuantity}
-              selectTextOnFocus={true}  // This will select all text when focused
-              maxLength={String(maxQuantity).length}  // Limit input length to max quantity length
+              selectTextOnFocus={true}
+              maxLength={String(maxQuantity).length}
+              accessibilityLabel="Quantity Input"
             />
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[
                 styles.quantityButton,
                 isIncrementDisabled() && styles.quantityButtonDisabled
               ]}
               onPress={incrementQuantity}
               disabled={isIncrementDisabled()}
+              accessibilityLabel="Increase Quantity"
             >
               <Text style={styles.quantityButtonText}>+</Text>
             </TouchableOpacity>
           </View>
-                
+               
           <View style={styles.modalActions}>
-            <TouchableOpacity 
-              style={styles.cancelButton} 
+            <TouchableOpacity
+              style={styles.cancelButton}
               onPress={onClose}
+              accessibilityLabel="Cancel"
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.confirmButton}
               onPress={handleConfirm}
+              accessibilityLabel="Add to Cart"
             >
               <Text style={styles.confirmButtonText}>Add to Cart</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
 
- 
-
 const styles = StyleSheet.create({
-  disabledButton: {
-    backgroundColor: '#cccccc',
-  },
-  disabledInput: {
-    backgroundColor: '#f5f5f5',
-    color: '#666666',
-  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -314,4 +311,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default QuantitySelectorModal;
+export default QuantitySelector;

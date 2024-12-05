@@ -31,12 +31,14 @@ type RootStackParamList = {
     subcategoryId: string;
     subcategoryName: string;
     subcategoryImage: string;
+    customerID: string;
   };
 };
 
 type SubCategoryScreenRouteProp = RouteProp<RootStackParamList, 'SubCategory'>;
 
 type SubCategoryItem = {
+  CustomerID: string;
   CATID: string;
   CATDESC: string;
   SUBCATID: string;
@@ -131,17 +133,13 @@ const SubCategory: React.FC = () => {
       );
 
       if (response.data && response.data.output) {
-        // console.log('Total items received:', response.data.output.length);
-        // console.log('Category ID to filter:', route.params.categoryId);
-
         const filteredSubCategories = response.data.output.filter((item: SubCategoryItem) => 
           item.CATID === route.params.categoryId
         );
 
-        // console.log('Filtered subcategories:', filteredSubCategories.length);
-
         const uniqueSubCategories = filteredSubCategories.map((item: SubCategoryItem) => ({
           ...item,
+          CustomerID: CustomerID || '', // Ensure CustomerID is always a string
           subcategoryImage: formatImageName(item.SUBCATID, false),
           imageUrl: getSubcategoryImage(item.SUBCATID)
         }));
@@ -183,16 +181,23 @@ const SubCategory: React.FC = () => {
     setFilteredSubCategories(filtered);
   }, [subCategories]);
 
-  
   const handleSubCategoryPress = useCallback((item: SubCategoryItem) => {
+    // Ensure CustomerID is passed to the next screen
+    console.log("Navigating to ItemDetailScreen with:", {
+      subcategoryId: item.SUBCATID,
+      subcategoryName: item.SUBCATDESC,
+      subcategoryImage: item.imageUrl,
+      customerID: item.CustomerID || CustomerID
+    });
+
     navigation.navigate('ItemDetailScreen', {
       subcategoryId: item.SUBCATID,
       subcategoryName: item.SUBCATDESC,
       subcategoryImage: item.imageUrl,
-      
+      customerID: item.CustomerID || CustomerID || ''
     });
-  }, [navigation]);
-   
+  }, [navigation, CustomerID]);
+
 
   const renderSubCategoryItem = useCallback(({ item }: { item: SubCategoryItem }) => {
     return (
@@ -207,11 +212,12 @@ const SubCategory: React.FC = () => {
             style={styles.cardImage}
             resizeMode="contain"
             onError={(error) => {
-              console.warn(`Failed to load image for subcategory ${item.SUBCATID}:, error`);
+              console.warn(`Failed to load image for subcategory ${item.SUBCATID}:`, error);
             }}
           />
         </View>
         <View style={styles.cardContent}>
+          <Text style={styles.categoryCode}>{item.CustomerID}</Text>
           <Text style={styles.categoryCode}>{item.SUBCATCODE}</Text>
           <Text style={styles.categoryName} numberOfLines={2}>
             {item.SUBCATDESC}

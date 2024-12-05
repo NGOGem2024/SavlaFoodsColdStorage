@@ -33,8 +33,6 @@ const OtpVerification: React.FC = () => {
   const navigation = useNavigation<OtpVerificationScreenNavigationProp>();
   
 
- 
-
   const loginWithUsernameAndPassword = async () => {
     setIsLoading(true);
     try {

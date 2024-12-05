@@ -6,6 +6,8 @@ import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import ProfileMenu from './ProfileMenu';
+import { MainStackParamList } from "../../App";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 type HeaderProps = {
   displayName: string | null;
@@ -13,10 +15,15 @@ type HeaderProps = {
   onAccountSwitch?: () => void;
 };
 
+type HeaderScreenNavigationProp = StackNavigationProp<
+  MainStackParamList,
+  'CartScreen'
+>;
+
 const { width } = Dimensions.get('window');
 
 const Header: React.FC<HeaderProps> = ({ displayName, cartItemCount, onAccountSwitch}) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<HeaderScreenNavigationProp>();
 
   return (
     <View style={styles.header}>

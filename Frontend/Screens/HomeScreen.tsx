@@ -46,13 +46,14 @@ type CategoryItem = {
   CATID: string;
   CATCODE: string;
   CATDESC: string;
+  customerID:string;
   // CAT_IMGFILE: string;
   categoryImage: string;    // Will contain "C{CATID}.jpg"
   subcategoryImage: string; // Will contain "SC{SUBCATID}.jpg"
 };
 
 const { width } = Dimensions.get("window");
-const BASE_IMAGE_PATH = 'http://192.168.1.3:3000/assets/images'; // Adjust this to your image server path
+const BASE_IMAGE_PATH =`${BACKEND_URL}/assets/images`; // Adjust this to your image server path
 // const imageService = ImageService.getInstance();
 
 
@@ -94,11 +95,13 @@ const HomeScreen: React.FC = () => {
   const fetchCustomerID = useCallback(async () => {
     try {
       const storedId = await AsyncStorage.getItem("customerID");
+      console.log(CustomerID);
       if (storedId) {
         setCustomerID(storedId);
         fetchCategories(storedId); // Pass the customerID directly
       } else {
         const response = await axios.get(`${BACKEND_URL}/getCustomerID`);
+        console.log("cutomer ",CustomerID);
         const newId = response.data.customerID;
         if (newId) {
           await AsyncStorage.setItem("customerID", newId);
@@ -230,7 +233,7 @@ const HomeScreen: React.FC = () => {
           setCustomerID(id);
           await AsyncStorage.setItem("customerID", id);
         } else {
-          const response = await axios.get("http://192.168.1.3/getCustomerID");
+          const response = await axios.get(`${BACKEND_URL}/getCustomerID`);
           id = response.data.customerID;
           setCustomerID(id);
           await AsyncStorage.setItem("customerID", id || "");
@@ -284,12 +287,19 @@ useEffect(() => {
       return (
         <TouchableOpacity
           style={styles.card}
-          onPress={() =>
+          onPress={() =>{
+            if (!CustomerID) {
+              console.log("CustomerID is missing!");
+              Alert.alert('Error', 'Customer ID not available');
+              return;
+            }
+            console.log("Navigating to SubCategory with CustomerID:", CustomerID);
             navigation.navigate("SubCategory", {
               category: item.CATDESC,
               categoryId: item.CATID,              
+              customerID:CustomerID,
             })
-          }
+          }}
         >
           <View style={styles.imageContainer}>
             <Image
@@ -302,7 +312,7 @@ useEffect(() => {
         </TouchableOpacity>
       );
     },
-    [navigation]
+    [navigation, CustomerID]
   );
 
   const handleSearch = useCallback(
@@ -451,4 +461,4 @@ const styles = StyleSheet.create({
 
 export default HomeScreen;
   
-//23.11
+

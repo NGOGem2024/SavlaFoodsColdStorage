@@ -1,8 +1,6 @@
-
-//nandini
 import { NavigationProp, RouteProp } from "@react-navigation/native";
 import axios from "axios";
-import { CreditCard, Grid, MoreVertical, Search } from "lucide-react-native";
+import { CreditCard, Grid, Search } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -17,11 +15,11 @@ import {
   View
 } from "react-native";
 import { MainStackParamList } from "../../App";
-import QuantitySelectModal from './QuantitySelectorModal';
+import QuantitySelectorModal from './QuantitySelector';
 
 const BACKEND_URL = "http://192.168.1.3:3000/sf";
 
-// Keep existing interfaces
+// Updated interfaces
 interface ItemDetails {
   DESCRIPTION: string;
   ITEM_CODE: string;
@@ -29,17 +27,9 @@ interface ItemDetails {
   ITEM_NAME: string;
   ITEM_SUB_CATEGORY_ID: number;
 }
-interface Item {
-  ITEM_ID: number;
-  ITEM_CODE: string;
-  DESCRIPTION: string;
-  ITEM_NAME: string;
-  BALANCE_QTY_SUM: number;
-}
 
 interface StockDetails {
   LOT_NO: string | null;
-  // FK_UNIT_ID: number | null;
   ITEM_MARKS: string | null;
   VAKAL_NO: string | null;
   BATCH_NO: string | null;
@@ -52,7 +42,10 @@ interface StockDetails {
 }
 
 interface APIResponse {
-  input: { ItemID: number };
+  input: { 
+    ItemID: number; 
+    CustomerID: string | number;
+  };
   output: {
     itemDetails: ItemDetails;
     stockDetails: StockDetails[];
@@ -69,8 +62,10 @@ interface ItemDetailsExpandedProps {
   route: ItemDetailsExpandedRouteProp;
   navigation: ItemDetailsExpandedNavigationProp;
 }
- 
+
 const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, navigation }) => {
+  // Get customerID from route params
+  const customerID = route.params?.customerID;
   const [itemDetails, setItemDetails] = useState<ItemDetails | null>(null);
   const [stockDetails, setStockDetails] = useState<StockDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,11 +77,8 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
   const [cartAnimations, setCartAnimations] = useState<{
     [key: string]: Animated.Value;
   }>({});
-  const [quantity, setQuantity] = useState("");
-  const [selectedLotNo, setSelectedLotNo] = useState<string | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-  const [addedToCart, setAddedToCart] = useState<{ [key: number]: number }>({});
+  const [selectedLotNo, setSelectedLotNo] = useState<string | null>(null);
 
   useEffect(() => {
     const animations: { [key: string]: Animated.Value } = {};
@@ -96,47 +88,19 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
     setCartAnimations(animations);
   }, [stockDetails]);
 
-   // Add cart functionality
-   const handleAddToCart = (lotNo: string | null) => {
-    if (!lotNo) return;
-    
-    // Trigger animation
-    Animated.sequence([
-      Animated.timing(cartAnimations[lotNo], {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cartAnimations[lotNo], {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  
-    setSelectedLotNo(lotNo);
-    setModalVisible(true);
-  };
-
-
-
-  const handleConfirmQuantity = () => {
-    console.log("Item added to cart with quantity:", quantity);
-    console.log("Lot No:", selectedLotNo);
-    setModalVisible(false);
-    setQuantity("");
-    setSelectedLotNo(null);
-  };
-
   const fetchStockDetails = async (showLoader = true) => {
     if (showLoader) setLoading(true);
     setError(null);
 
     try {
       const { ItemID } = route.params;
+      
       const response = await axios.post<APIResponse>(
         `${BACKEND_URL}/getItemDetailsWithStock`,
-        { ItemID },
+        { 
+          ItemID, 
+          CustomerID: customerID
+        },
         {
           headers: {
             "Content-Type": "application/json",
@@ -145,14 +109,16 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
           timeout: 10000,
         }
       );
+
       console.log("Response received:", response.data);
 
       if (response.data?.output) {
-        const { stockDetails } = response.data.output;
+        const { stockDetails, itemDetails } = response.data.output;
         if (!stockDetails || stockDetails.length === 0) {
           setError("No stock details available");
           setStockDetails([]);
         } else {
+          setItemDetails(itemDetails);
           setStockDetails(stockDetails);
           setError(null);
         }
@@ -172,20 +138,20 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
   };
 
   useEffect(() => {
-    if (!route.params?.ItemID) {
-      setError("Invalid item ID");
+    if (!route.params?.ItemID || !customerID) {
+      setError("Invalid item ID or customer ID");
       setLoading(false);
       return;
     }
     fetchStockDetails();
-  }, [route.params.ItemID]);
-
+  }, [route.params.ItemID, customerID]);
+ 
   const onRefresh = () => {
     setRefreshing(true);
     fetchStockDetails(false);
   };
   // Keep existing fetchStockDetails, useEffect, and other utility functions
-
+ 
   const fadeIn = (index: number) => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -194,7 +160,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
       useNativeDriver: true,
     }).start();
   };
-
+ 
   const formatDate = (dateString: string | null) => {
     if (!dateString || dateString === "null") return ""; // Return empty string instead of 'N/A'
     try {
@@ -212,12 +178,12 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
       return ""; // Return empty string instead of 'Null'
     }
   };
-
+ 
   const formatQuantity = (quantity: number | null) => {
     if (quantity === null) return "N/A";
     return quantity.toLocaleString();
   };
-
+ 
   const filteredStockDetails = stockDetails.filter((stock) => {
     const searchLower = searchQuery.toLowerCase();
     return (
@@ -236,7 +202,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
       (stock.REMARKS?.toString().toLowerCase().includes(searchLower) ?? false)
     );
   });
-
+ 
   const renderCardView = () => (
     <ScrollView
       style={styles.container}
@@ -263,8 +229,8 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
           ]}
           onLayout={() => fadeIn(index)}
         >
-          <View style={styles.stockHeader}>             
-            
+          <View style={styles.stockHeader}>            
+           
 <View style={styles.lotNoContainer}>
   <Text style={styles.lotNoLabel}>LOT NO : </Text>
   <TouchableOpacity
@@ -274,7 +240,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
     <Text style={styles.lotNoValue}>{stock.LOT_NO || "N/A"}</Text>
   </TouchableOpacity>
 </View>
-
+ 
             <Animated.View
               style={[
                 styles.addToCartContainer,
@@ -300,7 +266,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
                 {/* <Text style={styles.addToCartText}>Add</Text> */}
               </TouchableOpacity>
             </Animated.View>
-            
+           
             {/* <View style={styles.quantityContainer}>
               <Text style={styles.quantityValue}>
                 {formatQuantity(stock.AVAILABLE_QTY)}
@@ -339,7 +305,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
             </View>
             <View style={styles.detailRow}>
               <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>AVAILABLE Quantity</Text>
+              <Text style={styles.detailLabel}>Available Quantity</Text>
                 <Text style={styles.detailValue}>
                   {formatQuantity(stock.AVAILABLE_QTY)}
                 </Text>
@@ -349,7 +315,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
                 <Text style={styles.detailValue}>
                   {formatQuantity(stock.BOX_QUANTITY)}
                 </Text>
-                
+               
               </View>
             </View>
             <View style={styles.detailRow}>
@@ -367,28 +333,33 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
           </View>
         </Animated.View>
       ))}
-
+ 
    
-       <QuantitySelectModal
-        isVisible={isModalVisible}
-        selectedLotNo={selectedLotNo}
-        stockDetails={stockDetails}
-        onClose={() => {
-          setModalVisible(false);
-          setSelectedLotNo(null);
-        } }
-        onConfirm={(quantity) => {
-          console.log('Item added to cart:', {
-            lotNo: selectedLotNo,
-            quantity: quantity
-          });          
-          setModalVisible(false);
-          setSelectedLotNo(null);
-          
-        } } itemName={""}/>         
+       <QuantitySelectorModal
+  isVisible={isModalVisible}
+  item={{
+    item_id: 0, // You might want to get this from the selected stock item
+    item_name: "", // You'll want to pass the actual item name
+    lot_no: selectedLotNo || "",
+    available_qty: stockDetails.find(stock => stock.LOT_NO === selectedLotNo)?.AVAILABLE_QTY || 0,
+    unit_name: stockDetails.find(stock => stock.LOT_NO === selectedLotNo)?.UNIT_NAME || ""
+  }}
+  onClose={() => {
+    setModalVisible(false);
+    setSelectedLotNo(null);
+  }}
+  onConfirm={(quantity) => {
+    console.log('Item added to cart:', {
+      lotNo: selectedLotNo,
+      quantity: quantity
+    });          
+    setModalVisible(false);
+    setSelectedLotNo(null);
+  }}
+/>      
     </ScrollView>
   );
-
+ 
   const renderTableView = () => (
     <ScrollView
       style={styles.container}
@@ -429,7 +400,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
             //     <Text style={[styles.tableCell, { width: 150 }]}>{formatDate(stock.EXPIRY_DATE)}</Text>
             //     <Text style={[styles.tableCell, { width: 100 }]}>{stock.STATUS || 'N/A'}</Text>
             //   </View>
-
+ 
             <View key={index} style={styles.tableRow}>
               <View style={[styles.tableCellContainer, { width: 120 }]}>
                 <Text style={[styles.tableCell, styles.lotNoTableCell]}>
@@ -477,7 +448,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
       </View>
     </ScrollView>
   );
-
+ 
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -485,7 +456,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
       </View>
     );
   }
-
+ 
   if (error) {
     return (
       <View style={styles.errorContainer}>
@@ -499,11 +470,11 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
       </View>
     );
   }
-
+ 
   return (
     <View style={styles.mainContainer}>
       <View style={styles.headerContainer}>
-      
+     
         <View style={styles.searchContainer}>
           <Search size={20} color="#6B7280" style={styles.searchIcon} />
           <TextInput
@@ -535,20 +506,20 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
             <Grid size={23} color={isTableView ? "#007bff" : "#007bff"} />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity 
+        {/* <TouchableOpacity
           style={styles.menuButton}
           onPress={() => navigation.navigate('PlaceOrderScreen')}
         >
           <MoreVertical size={24} color="#333" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         </View>
       </View>
-
+ 
       {isTableView ? renderTableView() : renderCardView()}
     </View>
   );
 };
-
+ 
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
@@ -645,7 +616,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-
+ 
   detailItem: {
     flex: 1,
     marginHorizontal: 8,
@@ -699,7 +670,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-
+ 
   lotNoValueContainer: {
     backgroundColor: "#F48221",
     borderRadius: 4, // Reduced from 6
@@ -783,7 +754,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   cartIcon: {
-    fontSize: 20,     
+    fontSize: 20,    
   },
   modalOverlay: {
     flex: 1,
@@ -819,13 +790,15 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     color: "white",
     fontWeight: "bold",
-    
+   
   },
   confirmButtonText1: {
     color: "white",
     fontWeight: "bold",
-    
+   
   },
 });
-
+ 
 export default ItemDetailsExpanded;
+ 
+ 

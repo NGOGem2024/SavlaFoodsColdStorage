@@ -37,6 +37,33 @@ interface Item {
   subcategoryId: string;
 }
 
+export interface Items {
+  item_id: number | string;
+  item_name: string;
+  lot_no: string;
+  available_qty: number;
+  unit_name: string;
+  item_marks?: string;
+  vakal_no?: string;
+}
+
+export interface OrderItem extends Items {
+  quantity: number;
+}
+
+export interface OrderItem {
+  itemId: number;
+  lotNo: number;
+  quantity: number;
+}
+
+export interface OrderResponse {
+  success: boolean;
+  message: string;
+  orderDetails?: OrderItem[];
+  error?: string;
+}
+
 export interface CategoryImage {
   id: string;
   code: string;
@@ -49,10 +76,12 @@ export interface ImageMapping {
   imageUrl: string;
 }
 
+
 export interface ImageResponse {
   categories: ImageMapping[];
   subcategories: ImageMapping[];
 }
+
 
 
 
