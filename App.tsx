@@ -94,14 +94,14 @@ import {
   StackScreenProps,
 } from "@react-navigation/stack";
 import React from "react";
-import InwardsScreen from "./assets/InwardsScreen";
+import InwardsScreen from "./ExtraScreens/InwardsScreen";
 import ExpiringProductsScreen from "./ExtraScreens/ExpiringProductsScreen";
 import InvoicesScreen from "./ExtraScreens/InvoicesScreen";
 import OrderPlacementScreen from "./ExtraScreens/OrderPlacementScreen";
 import OutwardsScreen from "./ExtraScreens/OutwardsScreen";
 import ProductSearchScreen from "./ExtraScreens/ProductSearchScreen";
 import BottomTabNavigator from "./Frontend/Screens/BottomTabs/BottomTabNavigator";
-import CartScreen from "./Frontend/Screens/CartScreen";
+// import CartScreen from "./Frontend/Screens/CartScreen";
 import { CartProvider } from "./Frontend/Screens/contexts/CartContext";
 import { DisplayNameProvider } from "./Frontend/Screens/contexts/DisplayNameContext";
 import { NotificationProvider } from "./Frontend/Screens/contexts/NotificationContext";
@@ -114,6 +114,9 @@ import PlaceOrderScreen from "./Frontend/Screens/PlaceOrderScreen";
 import SplashScreen from "./Frontend/Screens/SplashScreen";
 import StocksScreen from "./Frontend/Screens/StocksScreen";
 import SubCategory from "./Frontend/Screens/SubCategory";
+import QuantitySelectorModal from "./Frontend/Screens/QuantitySelectorModal";
+// import { Item } from './Frontend/type/types'
+// import {CartItem} from '././Frontend/type/types'
 
 // Define the type for route params
 // export type RootStackParamList = {
@@ -153,10 +156,30 @@ import SubCategory from "./Frontend/Screens/SubCategory";
 // const RootStack = createStackNavigator<RootStackParamList>();
 // const MainStack = createStackNavigator<RootStackParamList>();
 
+interface Item {
+  ITEM_ID: number;
+  ITEM_NAME: string;
+  LOT_NO: string;
+  ITEM_MARKS?: string;
+  VAKAL_NO?: string;
+  AVAILABLE_QTY: number;
+  UNIT_NAME: string;
+  quantity?: number;
+}
+
+
 export type RootStackParamList = {
   SplashScreen: undefined;
-  OtpVerificationScreen: undefined;
-  Main: undefined;
+  OtpVerificationScreen: {
+    customerID:string;
+  };
+  Main: {
+    screen: string; // Screen name in the nested navigator
+    params?: {
+      initialLogin?: boolean;
+      customerID?: string;
+    };
+  };
   HomeScreen: {
     switchedAccount?: boolean;
     newCustomerId?: string;
@@ -165,7 +188,8 @@ export type RootStackParamList = {
     customerID?: string;
   };
 };
-
+ 
+ 
 // Separate type for main stack params
 export type MainStackParamList = {
   BottomTabNavigator: undefined;
@@ -176,22 +200,50 @@ export type MainStackParamList = {
   Invoices: undefined;
   ProductSearchScreen: undefined;
   OrderPlacementScreen: undefined;
-  PlaceOrderScreen: undefined;
+  // PlaceOrderScreen: undefined;
+  QuantitySelectorModal: { 
+    item: {
+      item_id: number;
+      lot_no: string;
+      available_qty: number;
+      customerID?: number | string;       
+      vakal_no?: string;
+      item_marks?: string;
+    };
+  };
+  PlaceOrderScreen: {
+    selectedItems: {
+      ItemID: number;
+      LotNo: string;
+      Quantity: number;
+      CustomerID?: number | string;
+      item_name?: string;
+      unit_name?: string;
+      vakal_no?: string;
+      item_marks?: string;
+    }[];
+  };
   SubCategory: {
     category: string;
     categoryId: string;
+    customerID:string;
+    subcategoryImage:string;
   };
   ItemDetailScreen: {
     subcategoryId: string;
     subcategoryName: string;
     subcategoryImage: string;
+    customerID:string;
   };
   ItemDetailsExpanded: {
     ItemID: number;
     itemName: string;
+    customerID:string;
+     
   };
   CartScreen: undefined;
   LotReportScreen: undefined;
+  
 };
 
 // Create separate navigators with their specific param lists
@@ -304,7 +356,9 @@ const MainStackNavigator: React.FC = () => {
         name="OrderPlacementScreen"
         component={OrderPlacementScreen}
       />
-      <MainStack.Screen name="PlaceOrderScreen" component={PlaceOrderScreen} />
+      <MainStack.Screen name="PlaceOrderScreen" component={PlaceOrderScreen}    options={({ route }) => ({
+          title:"Place Order",
+        })}/>
       <MainStack.Screen
         name="SubCategory"
         component={SubCategory}
@@ -326,12 +380,20 @@ const MainStackNavigator: React.FC = () => {
           title: route.params.itemName,
         })}
       />
-      <MainStack.Screen name="CartScreen" component={CartScreen} />
+      {/* <MainStack.Screen name="CartScreen" component={CartScreen} /> */}
       <MainStack.Screen
         name="LotReportScreen"
         component={LotReportScreen}
         options={{ title: "Lot Report" }}
       />
+        <MainStack.Screen 
+          name="QuantitySelectorModal" 
+          component={QuantitySelectorModal} 
+          options={{ 
+            presentation: 'modal',
+            title: 'Select Quantity' 
+          }}
+        />
     </MainStack.Navigator>
   );
 };
@@ -363,6 +425,9 @@ const App: React.FC = () => {
                 // component={HomeScreen}
                 component={MainStackNavigator}
                 options={{ headerShown: false }}
+                // options={({ route }) => ({
+                //   title: route.params.category,
+                // })}
               />
             </RootStack.Navigator>
           </CartProvider>

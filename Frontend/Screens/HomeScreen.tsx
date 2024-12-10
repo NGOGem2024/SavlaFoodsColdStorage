@@ -29,7 +29,7 @@ import Header from "./Header"; // Update path as needed
 import { useCart } from "./contexts/CartContext";
 import { useDisplayName } from "./contexts/DisplayNameContext";
 
-const BACKEND_URL = "http://192.168.1.3:3000";
+const BACKEND_URL = "http://192.168.1.37:3000";
 
 interface HomeScreenParams {
   initialLogin?: boolean;
@@ -43,6 +43,7 @@ type HomeScreenNavigationProp = NavigationProp<MainStackParamList>;
 
 type CategoryItem = {
   imageUrl: any;
+  customerID:string;
   CATID: string;
   CATCODE: string;
   CATDESC: string;
@@ -52,7 +53,7 @@ type CategoryItem = {
 };
 
 const { width } = Dimensions.get("window");
-const BASE_IMAGE_PATH = 'http://192.168.1.3:3000/assets/images'; // Adjust this to your image server path
+const BASE_IMAGE_PATH = 'http://192.168.1.37:3000/assets/images'; // Adjust this to your image server path
 // const imageService = ImageService.getInstance();
 
 
@@ -113,6 +114,7 @@ const HomeScreen: React.FC = () => {
   }, []);
 
   const fetchCategories = useCallback(async (customerId: string) => {
+    console.log('Fetching Categories for CustomerID:', customerId);
     try {
       const response = await axios.post(
         `${BACKEND_URL}/sf/getItemCatSubCat`,
@@ -175,10 +177,9 @@ const HomeScreen: React.FC = () => {
 
     initializeData();
   }, [
-    route.params?.switchedAccount,
+    route.params?.switchedAccount, 
     route.params?.newCustomerId,
-    route.params?.initialLogin,
-    route.params?.customerID,
+    fetchCustomerID,
     fetchCategories
   ]);
 
@@ -199,8 +200,18 @@ const HomeScreen: React.FC = () => {
     loadImageMappings();
   }, []);
 
-  const { cart } = useCart();
-  const cartItemCount = cart.length;
+ 
+   // Safely handle cart context
+   const { cartItems } = useCart() || {};
+   const cartItemCount = cartItems?.length || 0;
+ 
+
+  // Add handleCartPress method
+  const handleCartPress = () => {
+    navigation.navigate('PlaceOrderScreen');
+  };
+
+ 
 
   useEffect(() => {
     const fetchDisplayName = async () => {
@@ -230,7 +241,7 @@ const HomeScreen: React.FC = () => {
           setCustomerID(id);
           await AsyncStorage.setItem("customerID", id);
         } else {
-          const response = await axios.get("http://192.168.1.3/getCustomerID");
+          const response = await axios.get("http://192.168.1.37/getCustomerID");
           id = response.data.customerID;
           setCustomerID(id);
           await AsyncStorage.setItem("customerID", id || "");
@@ -252,6 +263,7 @@ useEffect(() => {
 // Handle CustomerID updates
 useEffect(() => {
   const fetchCustomerID = async () => {
+    console.log(CustomerID);
     try {
       if (route.params?.switchedAccount && route.params?.newCustomerId) {
         await AsyncStorage.setItem("customerID", route.params.newCustomerId);
@@ -278,32 +290,33 @@ useEffect(() => {
 
   fetchCustomerID();
 }, [route.params?.switchedAccount, route.params?.newCustomerId]);
-
-  const renderCardItem = useCallback(
-    ({ item }: { item: CategoryItem }) => {
-      return (
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() =>
-            navigation.navigate("SubCategory", {
-              category: item.CATDESC,
-              categoryId: item.CATID,              
-            })
-          }
-        >
-          <View style={styles.imageContainer}>
-            <Image
-              source={item.imageUrl}
-              style={styles.cardImage}
-              resizeMode="contain"
-            />
-          </View>
-          <Text style={styles.cardText}>{item.CATDESC}</Text>
-        </TouchableOpacity>
-      );
-    },
-    [navigation]
-  );
+const renderCardItem = useCallback(
+  ({ item }: { item: CategoryItem }) => {
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() =>
+          navigation.navigate("SubCategory", {              
+            category: item.CATDESC,
+            categoryId: item.CATID,     
+            customerID: CustomerID || item.customerID, // Prioritize the current CustomerID
+            subcategoryImage: item.subcategoryImage // Add this if needed
+          })
+        }
+      >
+        <View style={styles.imageContainer}>
+          <Image
+            source={item.imageUrl}
+            style={styles.cardImage}
+            resizeMode="contain"
+          />
+        </View>
+        <Text style={styles.cardText}>{item.CATDESC}</Text>
+      </TouchableOpacity>
+    );
+  },
+  [navigation, CustomerID]
+);
 
   const handleSearch = useCallback(
     (text: string) => {
@@ -316,16 +329,18 @@ useEffect(() => {
     [categories]
   );
 
+ 
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#ddd" />
       {/* <Header displayName={displayName} cartItemCount={cartItemCount} /> */}
       <Header 
-        displayName={displayName} 
-        cartItemCount={cartItemCount}
-        onAccountSwitch={handleAccountSwitch} // Pass the callback
-      />
+         displayName={displayName}
+         cartItemCount={cartItemCount}
+         onCartPress={handleCartPress}
+         onAccountSwitch={handleAccountSwitch}
+        />
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}

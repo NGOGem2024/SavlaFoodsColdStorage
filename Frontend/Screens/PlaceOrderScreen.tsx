@@ -1,415 +1,144 @@
-// import React, { useState, useEffect } from 'react';
+//  import React, { useState, useEffect } from 'react';
 // import {
 //   View,
 //   Text,
-//   TextInput,
+//   FlatList,
 //   TouchableOpacity,
 //   StyleSheet,
-//   ScrollView,
-//   Alert,
-//   SafeAreaView,
-//   Animated,
-//   Dimensions,
-//   Image,
+//   Alert
 // } from 'react-native';
-// import { NavigationProp } from '@react-navigation/native';
-// import { Package, Box, Boxes, ShoppingBag, TrendingUp, ClipboardCheck } from 'lucide-react-native';
+// import axios from 'axios';
+// import { MainStackParamList } from '../../App';
+// import { StackNavigationProp } from '@react-navigation/stack';
+// import { RouteProp } from '@react-navigation/native';
+
+// const BACKEND_URL = "http://192.168.43.69:3000/sf";
+
+// interface OrderItem {
+//   ItemID: number;
+//   LotNo: string;
+//   Quantity: number;
+//   CustomerID?: number | string;
+//   item_name?: string;
+//   unit_name?: string;
+// }
+
+// type PlaceOrderScreenRouteProp = RouteProp<MainStackParamList, 'PlaceOrderScreen'>;
+// type PlaceOrderScreenNavigationProp = StackNavigationProp<MainStackParamList, 'PlaceOrderScreen'>;
 
 // interface PlaceOrderScreenProps {
-//   navigation: NavigationProp<any>;
-//   route: any;
+//   route: PlaceOrderScreenRouteProp;
+//   navigation: PlaceOrderScreenNavigationProp;
 // }
 
-// interface ItemDetails {
-//   category: string;
-//   subcategory: string;
-//   lotNo: string;
-//   vakkal: string;
-//   availableQty: number;
-//   netQty: number;
-//   balanceQty: number;
-//   placedQty: number;
-// }
-
-// const PlaceOrderScreen: React.FC<PlaceOrderScreenProps> = ({ navigation, route }) => {
-//   const [itemDetails, setItemDetails] = useState<ItemDetails>({
-//     category: '',
-//     subcategory: '',
-//     lotNo: '',
-//     vakkal: '',
-//     availableQty: 0,
-//     netQty: 0,
-//     balanceQty: 0,
-//     placedQty: 0,
-//   });
-
-//   // Animation values
-//   const fadeAnim = new Animated.Value(0);
-//   const slideAnim = new Animated.Value(-50);
-//   const scaleAnim = new Animated.Value(0.9);
-//   const progressAnim = new Animated.Value(0);
+// const PlaceOrderScreen: React.FC<PlaceOrderScreenProps> = ({ route, navigation }) => {
+//   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+//   const [loading, setLoading] = useState(false);
+   
 
 //   useEffect(() => {
-//     Animated.parallel([
-//       Animated.timing(fadeAnim, {
-//         toValue: 1,
-//         duration: 800,
-//         useNativeDriver: true,
-//       }),
-//       Animated.spring(slideAnim, {
-//         toValue: 0,
-//         speed: 12,
-//         bounciness: 6,
-//         useNativeDriver: true,
-//       }),
-//       Animated.spring(scaleAnim, {
-//         toValue: 1,
-//         speed: 12,
-//         bounciness: 6,
-//         useNativeDriver: true,
-//       })
-//     ]).start();
-//   }, []);
+//     if (route.params?.selectedItems) {
+//       setOrderItems(route.params.selectedItems);
+//     }
+//   }, [route.params?.selectedItems]);
 
-//   const animateProgress = () => {
-//     Animated.timing(progressAnim, {
-//       toValue: 1,
-//       duration: 1500,
-//       useNativeDriver: false,
-//     }).start();
+//   const handlePlaceOrder = async () => {
+//     try {
+//       setLoading(true);
+
+//       // Validate and process each item using the same API
+//       const processedItems = [];
+
+//       for (const item of orderItems) {
+//         // Re-validate stock and get updated details
+//         const response = await axios.post(`${BACKEND_URL}/getItemDetailsAndUpdateStock`, {
+//           LotNo: item.LotNo,
+//           CustomerID: item.CustomerID || '', 
+//           ItemID: item.ItemID,
+//           Quantity: item.Quantity
+//         });
+
+//         if (response.data.success) {
+//           processedItems.push(response.data.data);
+//         } else {
+//           throw new Error(`Failed to process item: ${item.LotNo}`);
+//         }
+//       }
+
+//       // If all items are processed successfully, show success message
+//       Alert.alert(
+//         'Order Placed',
+//         'Your order has been successfully placed!',
+//         // [{ text: 'OK', onPress: () => navigation.navigate('HomeScreen') }]
+//       );
+
+//     } catch (error) {
+//       console.error('Order placement error:', error);
+//       Alert.alert('Error', 'Failed to place order. Please try again.');
+//     } finally {
+//       setLoading(false);
+//     }
 //   };
 
-//   const handlePlaceOrder = () => {
-//     if (itemDetails.placedQty <= 0) {
-//       Alert.alert('Error', 'Please enter a valid quantity');
-//       return;
-//     }
-
-//     if (itemDetails.placedQty > itemDetails.availableQty) {
-//       Alert.alert('Error', 'Placed quantity cannot exceed available quantity');
-//       return;
-//     }
-
-//     Alert.alert(
-//       'Confirm Order',
-//       'Do you want to place this order?',
-//       [
-//         {
-//           text: 'Cancel',
-//           style: 'cancel',
-//         },
-//         {
-//           text: 'Confirm',
-//           onPress: () => {
-//             animateProgress();
-//             setTimeout(() => {
-//               Alert.alert('Success', 'Order placed successfully');
-//               navigation.goBack();
-//             }, 1500);
-//           },
-//         },
-//       ]
-//     );
-//   };
-
-//   const progressWidth = progressAnim.interpolate({
-//     inputRange: [0, 1],
-//     outputRange: ['0%', '100%'],
-//   });
+//   const renderOrderItem = ({ item }: { item: OrderItem }) => (
+//     <View style={styles.orderItemContainer}>
+//       <Text style={styles.orderItemText}>Item Name: {item.item_name}</Text>
+//       <Text style={styles.orderItemText}>Lot No: {item.LotNo}</Text>
+//       <Text style={styles.orderItemText}>Item ID: {item.ItemID}</Text>
+//       <Text style={styles.orderItemText}>Ordered Quantity: {item.Quantity}</Text>
+//       <Text style={styles.orderItemText}>Unit: {item.unit_name}</Text>
+//     </View>
+//   );
 
 //   return (
-//     <SafeAreaView style={styles.container}>
-//       <ScrollView contentContainerStyle={styles.scrollContent}>
-//         <Animated.View 
-//           style={[
-//             styles.headerSection,
-//             {
-//               opacity: fadeAnim,
-//               transform: [{ translateY: slideAnim }]
-//             }
-//           ]}
-//         >
-//           <View style={styles.headerIconContainer}>
-//             <ShoppingBag size={32} color="#F48221" />
-//           </View>
-//           <Text style={styles.headerTitle}>Place Order</Text>
-//           <Text style={styles.headerSubtitle}>Review and confirm your order details</Text>
-//         </Animated.View>
-
-//         <Animated.View 
-//           style={[
-//             styles.card,
-//             {
-//               opacity: fadeAnim,
-//               transform: [
-//                 { translateY: slideAnim },
-//                 { scale: scaleAnim }
-//               ]
-//             }
-//           ]}
-//         >
-//           <View style={styles.sectionHeader}>
-//             <Package size={20} color="#F48221" />
-//             <Text style={styles.sectionTitle}>Item Details</Text>
-//           </View>
-
-//           <View style={styles.detailRow}>
-//             <Text style={styles.label}>Category:</Text>
-//             <Text style={styles.value}>{itemDetails.category || 'N/A'}</Text>
-//           </View>
-
-//           <View style={styles.detailRow}>
-//             <Text style={styles.label}>Subcategory:</Text>
-//             <Text style={styles.value}>{itemDetails.subcategory || 'N/A'}</Text>
-//           </View>
-
-//           <View style={styles.detailRow}>
-//             <Text style={styles.label}>Lot No:</Text>
-//             <Text style={styles.value}>{itemDetails.lotNo || 'N/A'}</Text>
-//           </View>
-
-//           <View style={styles.detailRow}>
-//             <Text style={styles.label}>Vakkal:</Text>
-//             <Text style={styles.value}>{itemDetails.vakkal || 'N/A'}</Text>
-//           </View>
-//         </Animated.View>
-
-//         <Animated.View 
-//           style={[
-//             styles.card,
-//             {
-//               opacity: fadeAnim,
-//               transform: [
-//                 { translateY: slideAnim },
-//                 { scale: scaleAnim }
-//               ]
-//             }
-//           ]}
-//         >
-//           <View style={styles.sectionHeader}>
-//             <Boxes size={20} color="#F48221" />
-//             <Text style={styles.sectionTitle}>Quantity Details</Text>
-//           </View>
-          
-//           <View style={styles.quantityGrid}>
-//             <View style={styles.quantityBox}>
-//               <Text style={styles.quantityLabel}>Available</Text>
-//               <Text style={styles.quantityValue}>{itemDetails.availableQty}</Text>
-//             </View>
-            
-//             <View style={styles.quantityBox}>
-//               <Text style={styles.quantityLabel}>Net</Text>
-//               <Text style={styles.quantityValue}>{itemDetails.netQty}</Text>
-//             </View>
-            
-//             <View style={styles.quantityBox}>
-//               <Text style={styles.quantityLabel}>Balance</Text>
-//               <Text style={styles.quantityValue}>{itemDetails.balanceQty}</Text>
-//             </View>
-//           </View>
-
-//           <View style={styles.placedQuantityContainer}>
-//             <Text style={styles.placedQuantityLabel}>Placed Quantity</Text>
-//             <View style={styles.inputContainer}>
-//               <TextInput
-//                 style={styles.quantityInput}
-//                 keyboardType="numeric"
-//                 value={itemDetails.placedQty.toString()}
-//                 onChangeText={(text) => 
-//                   setItemDetails({
-//                     ...itemDetails,
-//                     placedQty: parseInt(text) || 0
-//                   })
-//                 }
-//                 placeholder="Enter quantity"
-//                 placeholderTextColor="#999"
-//               />
-//               <View style={styles.inputIcon}>
-//                 <Box size={20} color="#666" />
-//               </View>
-//             </View>
-//           </View>
-//         </Animated.View>
-
-//         <Animated.View 
-//           style={[
-//             styles.progressContainer,
-//             { opacity: progressAnim }
-//           ]}
-//         >
-//           <Animated.View 
-//             style={[
-//               styles.progressBar,
-//               { width: progressWidth }
-//             ]} 
-//           />
-//         </Animated.View>
-
-//         <TouchableOpacity 
-//           style={styles.placeOrderButton}
-//           onPress={handlePlaceOrder}
-//           activeOpacity={0.8}
-//         >
-//           <ClipboardCheck size={24} color="#FFF" style={styles.buttonIcon} />
-//           <Text style={styles.placeOrderButtonText}>Place Order</Text>
-//         </TouchableOpacity>
-//       </ScrollView>
-//     </SafeAreaView>
+//     <View style={styles.container}>
+//       <Text style={styles.title}>Place Order</Text>
+//       <FlatList
+//         data={orderItems}
+//         renderItem={renderOrderItem}
+//         keyExtractor={(item) => `${item.ItemID}-${item.LotNo}`}
+//       />
+//       <TouchableOpacity
+//         style={styles.placeOrderButton}
+//         onPress={handlePlaceOrder}
+//         disabled={loading}
+//       >
+//         <Text style={styles.placeOrderButtonText}>
+//           {loading ? 'Processing...' : 'Place Order'}
+//         </Text>
+//       </TouchableOpacity>
+//     </View>
 //   );
 // };
 
 // const styles = StyleSheet.create({
+//   // ... (styles remain the same as in previous example)
 //   container: {
 //     flex: 1,
-//     backgroundColor: '#f8f9fa',
-//   },
-//   scrollContent: {
 //     padding: 16,
 //   },
-//   headerSection: {
-//     alignItems: 'center',
-//     marginBottom: 24,
-//   },
-//   headerIconContainer: {
-//     backgroundColor: '#FFF',
-//     padding: 16,
-//     borderRadius: 50,
-//     elevation: 4,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//     marginBottom: 12,
-//   },
-//   headerTitle: {
-//     fontSize: 24,
+//   title: {
+//     fontSize: 20,
 //     fontWeight: 'bold',
-//     color: '#1a1a1a',
-//     marginBottom: 4,
-//   },
-//   headerSubtitle: {
-//     fontSize: 14,
-//     color: '#666',
-//   },
-//   card: {
-//     backgroundColor: 'white',
-//     borderRadius: 16,
-//     padding: 20,
-//     marginBottom: 16,
-//     elevation: 4,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 8,
-//   },
-//   sectionHeader: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
 //     marginBottom: 16,
 //   },
-//   sectionTitle: {
-//     fontSize: 18,
-//     fontWeight: '600',
-//     color: '#1a1a1a',
-//     marginLeft: 8,
-//   },
-//   detailRow: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     paddingVertical: 12,
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#f0f0f0',
-//   },
-//   label: {
-//     fontSize: 15,
-//     color: '#666',
-//   },
-//   value: {
-//     fontSize: 15,
-//     color: '#1a1a1a',
-//     fontWeight: '500',
-//   },
-//   quantityGrid: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     marginBottom: 20,
-//   },
-//   quantityBox: {
-//     flex: 1,
-//     backgroundColor: '#f8f9fa',
+//   orderItemContainer: {
+//     backgroundColor: '#f9f9f9',
 //     padding: 12,
-//     borderRadius: 12,
-//     alignItems: 'center',
-//     marginHorizontal: 4,
+//     marginVertical: 8,
+//     borderRadius: 8,
 //   },
-//   quantityLabel: {
-//     fontSize: 12,
-//     color: '#666',
+//   orderItemText: {
 //     marginBottom: 4,
-//   },
-//   quantityValue: {
-//     fontSize: 18,
-//     fontWeight: 'bold',
-//     color: '#F48221',
-//   },
-//   placedQuantityContainer: {
-//     marginTop: 16,
-//   },
-//   placedQuantityLabel: {
-//     fontSize: 15,
-//     color: '#666',
-//     marginBottom: 8,
-//   },
-//   inputContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     borderWidth: 1,
-//     borderColor: '#e0e0e0',
-//     borderRadius: 12,
-//     backgroundColor: '#fff',
-//   },
-//   quantityInput: {
-//     flex: 1,
-//     padding: 12,
-//     fontSize: 16,
-//     color: '#1a1a1a',
-//   },
-//   inputIcon: {
-//     padding: 12,
-//     borderLeftWidth: 1,
-//     borderLeftColor: '#e0e0e0',
-//   },
-//   progressContainer: {
-//     height: 4,
-//     backgroundColor: '#e0e0e0',
-//     borderRadius: 2,
-//     marginVertical: 20,
-//     overflow: 'hidden',
-//   },
-//   progressBar: {
-//     height: '100%',
-//     backgroundColor: '#F48221',
 //   },
 //   placeOrderButton: {
-//     backgroundColor: '#F48221',
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'center',
+//     backgroundColor: '#007bff',
 //     padding: 16,
-//     borderRadius: 12,
-//     elevation: 4,
-//     shadowColor: '#F48221',
-//     shadowOffset: { width: 0, height: 4 },
-//     shadowOpacity: 0.3,
-//     shadowRadius: 8,
-//   },
-//   buttonIcon: {
-//     marginRight: 8,
+//     borderRadius: 8,
+//     alignItems: 'center',
 //   },
 //   placeOrderButtonText: {
 //     color: 'white',
-//     fontSize: 18,
 //     fontWeight: 'bold',
 //   },
 // });
@@ -417,165 +146,317 @@
 // export default PlaceOrderScreen;
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
   View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert
 } from 'react-native';
+import { RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { MainStackParamList } from '../../App';
+import { useCart } from './contexts/CartContext';
+import { Ionicons } from '@expo/vector-icons';
 
-interface FormData {
-  lotNo: string;  
-  vakkal: string;
-  quantity: string;
+
+// Define the type for the order item based on the API response
+interface OrderItem {
+  LOT_NO: string;
+  ITEM_ID: number;
+  VAKAL_NO: string;
+  ITEM_MARKS: string;
+  UNIT_NAME: string;
+  BOX_QUANTITY: number;
+  BALANCE_QTY: number;
+  UPDATED_QTY: number[];
+  ORDERED_QUANTITY: number;
 }
 
-const PlaceOrderScreen: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({
-    lotNo: '',
-    vakkal: '',
-    quantity: '',
-  });
+type PlaceOrderScreenRouteProp = RouteProp<MainStackParamList, 'PlaceOrderScreen'>;
+type PlaceOrderScreenNavigationProp = StackNavigationProp<MainStackParamList, 'PlaceOrderScreen'>;
 
-  const handleSubmit = (): void => {
-    // Handle order placement logic here
-    console.log('Order placed:', formData);
-  };
+interface PlaceOrderScreenProps {
+  route: PlaceOrderScreenRouteProp;
+  navigation: PlaceOrderScreenNavigationProp;
+}
 
-  const handleChange = (name: keyof FormData, value: string): void => {
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value,
-    }));
+const PlaceOrderScreen: React.FC<PlaceOrderScreenProps> = ({ route, navigation }) => {
+  // Get the selected items from route params
+  const { selectedItems } = route.params || { selectedItems: [] };
+  const { cartItems, clearCart ,removeCartItem} = useCart(); 
+  
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);//selectedItems
+
+
+  useEffect(() => {
+    // Combine items from route params and cart
+    if (selectedItems.length > 0 || cartItems.length > 0) {
+    const combinedItems : OrderItem[]= [
+      ...selectedItems,
+      ...cartItems.map(cartItem => ({
+        LOT_NO: cartItem.lot_no || '',
+        ITEM_ID: cartItem.item_id,
+        ITEM_NAME: cartItem.item_name,
+        VAKAL_NO: cartItem.vakal_no, // You might want to fetch these details
+        ITEM_MARKS: cartItem.item_marks,
+        UNIT_NAME: cartItem.unit_name || '',
+        BOX_QUANTITY: 0,
+        BALANCE_QTY: cartItem.available_qty || 0,
+        UPDATED_QTY: [cartItem.quantity],
+        ORDERED_QUANTITY: cartItem.quantity || 0
+      } as OrderItem))
+    ];
+
+    const uniqueItems = Array.from(
+      new Map(combinedItems.map(item => [item.LOT_NO, item])).values()
+    );
+
+    // Only update if the items have actually changed
+    setOrderItems(prevItems => {
+      const areItemsEqual = uniqueItems.length === prevItems.length && 
+        uniqueItems.every((item, index) => 
+          item.LOT_NO === prevItems[index]?.LOT_NO &&
+          item.ORDERED_QUANTITY === prevItems[index]?.ORDERED_QUANTITY
+        );
+      
+      return areItemsEqual ? prevItems : uniqueItems;
+    });
+ 
+  }
+     
+  }, [selectedItems, cartItems]);
+
+
+    // Function to remove an item from the order
+    const handleRemoveItem = (itemToRemove: OrderItem) => {
+      // Remove from orderItems state
+      setOrderItems(prevItems => 
+        prevItems.filter(item => item.LOT_NO !== itemToRemove.LOT_NO)
+      );
+  
+      // If the item is from cart, remove it from cart context
+      const cartItemToRemove = cartItems.find(
+        cartItem => cartItem.lot_no === itemToRemove.LOT_NO
+      );
+  
+      if (cartItemToRemove) {
+        removeCartItem(cartItemToRemove);
+      }
+    };
+
+  useEffect(() => {
+    // You can add any additional logic here if needed
+    console.log('Selected Items:', orderItems);
+  }, [orderItems]);
+
+  const renderOrderItem = (item: OrderItem, index: number) => (
+    <View key={index} style={styles.orderItemContainer}>
+      <View style={styles.orderItemHeader}>
+        <Text style={styles.orderItemTitle}>Lot No: {item.LOT_NO}</Text>
+        <TouchableOpacity 
+          style={styles.deleteIcon} 
+          onPress={() => {
+            Alert.alert(
+              'Remove Item',
+              'Are you sure you want to remove this item from the order?',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel'
+                },
+                {
+                  text: 'Remove',
+                  style: 'destructive',
+                  onPress: () => handleRemoveItem(item)
+                }
+              ]
+            );
+          }}
+        >
+          <Ionicons name="trash" size={24} color="red" />
+      </TouchableOpacity>      
+      
+      </View>
+      
+      <View style={styles.orderItemDetails}>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Item ID:</Text>
+          <Text style={styles.detailValue}>{item.ITEM_ID}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Vakal No:</Text>
+          <Text style={styles.detailValue}>{item.VAKAL_NO}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Item Marks:</Text>
+          <Text style={styles.detailValue}>{item.ITEM_MARKS}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Unit Name:</Text>
+          <Text style={styles.detailValue}>{item.UNIT_NAME}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Box Quantity:</Text>
+          <Text style={styles.detailValue}>{item.BOX_QUANTITY}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Balance Quantity:</Text>
+          <Text style={styles.detailValue}>{item.BALANCE_QTY}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Ordered Quantity:</Text>
+          <Text style={styles.detailValue}>{item.ORDERED_QUANTITY}</Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const handleConfirmOrder = () => {
+    // Implement order confirmation logic
+
+    // if (response.data.success) {
+      // Clear cart items
+      clearCart();
+
+
+    Alert.alert(
+      'Confirm Order',
+      'Are you sure you want to place this order?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Confirm',
+          onPress: () => {
+            // Add your order confirmation API call or navigation logic here
+            Alert.alert('Order Placed', 'Your order has been successfully placed.');
+            // Optionally navigate back or to another screen
+            navigation.goBack();
+          }
+        }
+      ]
+    
+    );
+  
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoidingView}
-      >
-        <ScrollView contentContainerStyle={styles.scrollView}>
-          <View style={styles.card}>
-            <Text style={styles.title}>Place Order</Text>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Lot No</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Lot Number"
-                value={formData.lotNo}
-                onChangeText={(value) => handleChange('lotNo', value)}
-                placeholderTextColor="#666"
-              />
-            </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Vakkal</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Vakkal"
-                value={formData.vakkal}
-                onChangeText={(value) => handleChange('vakkal', value)}
-                placeholderTextColor="#666"
-              />
-            </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Available Quantity</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Available Quantity"
-                value={formData.quantity}
-                onChangeText={(value) => handleChange('quantity', value)}
-                keyboardType="numeric"
-                placeholderTextColor="#666"
-              />
-            </View>
-
-            <TouchableOpacity 
-              style={styles.button}
-              onPress={handleSubmit}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.buttonText}>Place Order</Text>
-            </TouchableOpacity>
+    <View style={styles.container}>
+      <ScrollView>
+        {/* <Text style={styles.screenTitle}>Place Order</Text> */}
+        
+        {orderItems.length === 0 ? (
+          <View style={styles.emptyCartContainer}>
+            <Text style={styles.emptyCartText}>No items in the order</Text>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        ) : (
+          orderItems.map(renderOrderItem)
+        )}
+      </ScrollView>
+
+      {orderItems.length > 0 && (
+        <TouchableOpacity 
+          style={styles.confirmOrderButton}
+          onPress={handleConfirmOrder}
+        >
+          <Text style={styles.confirmOrderButtonText}>Confirm Order</Text>
+        </TouchableOpacity>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f5f5f5'
   },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollView: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 16,
-  },
-  card: {
+  // screenTitle: {
+  //   fontSize: 24,
+  //   fontWeight: 'bold',
+  //   textAlign: 'center',
+  //   marginVertical: 15,
+  //   color: '#007bff'
+  // },
+  orderItemContainer: {
     backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
+    marginHorizontal: 15,
+    marginVertical: 10,
+    borderRadius: 10,
+    padding: 15,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3
   },
-  title: {
-    fontSize: 24,
+  orderItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    paddingBottom: 10,
+    marginBottom: 10
+  },
+  deleteIcon: {
+    padding: 5,
+    marginLeft:-25
+  },
+  orderItemTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 24,
+    color: '#007bff'
+  },
+  orderItemDetails: {},
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500'
+  },
+  detailValue: {
+    fontSize: 14,
     color: '#333',
+    fontWeight: '600'
   },
-  inputContainer: {
-    marginBottom: 16,
+  emptyCartContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50
   },
-  label: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#333',
-    fontWeight: '500',
+  emptyCartText: {
+    fontSize: 18,
+    color: '#888'
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-    backgroundColor: '#fff',
+  confirmOrderButton: {
+    backgroundColor: '#007bff',
+    padding: 15,
+    margin: 15,
+    borderRadius: 10,
+    alignItems: 'center'
   },
-  button: {
-    backgroundColor: '#ff6b00',
-    padding: 16,
-    borderRadius: 8,
-    marginTop: 8,
-  },
-  buttonText: {
+  confirmOrderButtonText: {
     color: 'white',
-    textAlign: 'center',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+    fontSize: 18,
+    fontWeight: 'bold'
+  }
 });
 
 export default PlaceOrderScreen;

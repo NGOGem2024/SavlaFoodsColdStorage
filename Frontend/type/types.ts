@@ -29,7 +29,7 @@ export type RootStackParamList = {
     };
 };
 
-interface Item {
+export interface Item {
   ITEM_ID: number;
   ITEM_CODE: string;
   ITEM_NAME: string;
@@ -59,3 +59,21 @@ export interface ImageResponse {
 export type RootStackNavProps<T extends keyof RootStackParamList> = {
   navigation: StackNavigationProp<RootStackParamList, T>;
 }; 
+
+
+// src/types/types.ts
+// export interface CartItem {
+   
+//   item_id: number | string;
+//   item_name: string;
+//   lot_no: string;
+//   quantity: number;
+//   available_qty: number;
+//   unit_name: string;
+//   price?: number;
+//   description?: string;
+// }
+
+type CartItem = Item & {
+  quantity: number;
+};

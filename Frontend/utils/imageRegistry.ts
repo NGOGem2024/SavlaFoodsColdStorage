@@ -1,5 +1,6 @@
 
 import { Image, Platform } from 'react-native';
+import {CATEGORY_IMAGE_PATHS,SUBCATEGORY_IMAGE_PATHS} from './imagePaths';
 
 export interface ImageMapping {
   id: string;
@@ -33,64 +34,12 @@ class ImageRegistry {
   private imageLoadPromises: Map<string, Promise<any>> = new Map();
 
   private constructor() {
-    // Initialize category images
-    const categoryImages = {      
-      'C6': require('../../assets/images/categories/C6.jpg'),
-      'C7': require('../../assets/images/categories/C7.jpg'),
-      'C10': require('../../assets/images/categories/C10.jpg'),
-      'C12': require('../../assets/images/categories/C12.jpg'),
-      'C1': require('../../assets/images/categories/C1.jpg'),
-    };
-
-    // Initialize subcategory images
-    const subcategoryImages = {'SC1': require('../../assets/images/subcategories/SC1.jpg'),
-      'SC2': require('../../assets/images/subcategories/SC2.jpg'),
-      'SC4': require('../../assets/images/subcategories/SC4.jpg'),
-      'SC5': require('../../assets/images/subcategories/SC5.jpg'),
-      'SC6': require('../../assets/images/subcategories/SC6.jpg'),
-      'SC7': require('../../assets/images/subcategories/SC7.jpg'),
-      'SC8': require('../../assets/images/subcategories/SC8.jpg'),
-      'SC11': require('../../assets/images/subcategories/SC11.jpg'),
-      'SC13': require('../../assets/images/subcategories/SC13.jpg'),
-      'SC14': require('../../assets/images/subcategories/SC14.jpg'),
-      'SC20': require('../../assets/images/subcategories/SC20.jpg'),
-      'SC21': require('../../assets/images/subcategories/SC21.jpg'),
-      'SC22': require('../../assets/images/subcategories/SC22.jpg'),
-      'SC23': require('../../assets/images/subcategories/SC23.jpg'),
-      'SC26': require('../../assets/images/subcategories/SC26.jpg'),
-      'SC27': require('../../assets/images/subcategories/SC27.jpg'),
-      'SC29': require('../../assets/images/subcategories/SC29.jpg'),
-      'SC31': require('../../assets/images/subcategories/SC31.jpg'),
-      'SC32': require('../../assets/images/subcategories/SC32.jpg'),
-      'SC35': require('../../assets/images/subcategories/SC35.jpg'),      
-      'SC108':require('../../assets/images/subcategories/SC108.jpg'),
-     'SC110':require('../../assets/images/subcategories/SC110.jpg'),
-      'SC111':require('../../assets/images/subcategories/SC111.jpg'),
-      'SC112':require('../../assets/images/subcategories/SC112.jpg'),
-      'SC113':require('../../assets/images/subcategories/SC113.jpg'),
-      'SC114':require('../../assets/images/subcategories/SC114.jpg'),
-      'SC115':require('../../assets/images/subcategories/SC115.jpg'),
-      'SC118':require('../../assets/images/subcategories/SC118.jpg'),
-      'SC116':require('../../assets/images/subcategories/SC116.jpg'),
-      'SC119':require('../../assets/images/subcategories/SC119.jpg'),
-      'SC120':require('../../assets/images/subcategories/SC120.jpg'),
-      'SC121':require('../../assets/images/subcategories/SC121.jpg'),
-      'SC122':require('../../assets/images/subcategories/SC122.jpg'),
-      'SC123':require('../../assets/images/subcategories/SC123.jpg'),
-      'SC163':require('../../assets/images/subcategories/SC163.jpg'),
-      'SC166':require('../../assets/images/subcategories/SC166.jpg'),
-      // 'SC123':require('../../assets/images/subcategories/SC123.jpg'),
-      // 'SC123':require('../../assets/images/subcategories/SC123.jpg'),
-      // 'SC123':require('../../assets/images/subcategories/SC123.jpg'),
-
-    };
-
     // Populate caches
-    Object.entries(categoryImages).forEach(([key, value]) => {
+    Object.entries(CATEGORY_IMAGE_PATHS).forEach(([key, value]) => {
       this.categoryImageCache.set(key, { type: 'local', source: value });
     });
 
-    Object.entries(subcategoryImages).forEach(([key, value]) => {
+    Object.entries(SUBCATEGORY_IMAGE_PATHS).forEach(([key, value]) => {
       this.subcategoryImageCache.set(key, { type: 'local', source: value });
     });
   }

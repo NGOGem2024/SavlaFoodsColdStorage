@@ -1,3 +1,4 @@
+ 
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -19,11 +20,11 @@ import {
 } from 'react-native';
 import { fetchImageMappings, formatImageName, getSubcategoryImage, ImageMapping } from '../utils/imageRegistry';
 import { useCart } from './contexts/CartContext';
-
-const BACKEND_URL = "http://192.168.1.3:3000";
-
+ 
+const BACKEND_URL = "http://192.168.1.37:3000";
+ 
 type RootStackParamList = {
-  SubCategory: { 
+  SubCategory: {
     category: string;
     categoryId: string;
   };
@@ -31,12 +32,14 @@ type RootStackParamList = {
     subcategoryId: string;
     subcategoryName: string;
     subcategoryImage: string;
-  };
+    customerID: string;
 };
-
+};
+ 
 type SubCategoryScreenRouteProp = RouteProp<RootStackParamList, 'SubCategory'>;
-
+ 
 type SubCategoryItem = {
+  CustomerID: string;
   CATID: string;
   CATDESC: string;
   SUBCATID: string;
@@ -45,13 +48,13 @@ type SubCategoryItem = {
   subcategoryImage: string;
   imageUrl: any;
 };
-
+ 
 type NavigationProp = {
   navigate: (screen: string, params: any) => void;
 };
-
+ 
 const { width } = Dimensions.get('window');
-
+ 
 const SubCategory: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<SubCategoryScreenRouteProp>();
@@ -66,10 +69,10 @@ const SubCategory: React.FC = () => {
     categories: ImageMapping[];
     subcategories: ImageMapping[];
   }>({ categories: [], subcategories: [] });
-
-  const { cart } = useCart();
-  const cartItemCount = cart.length;
-
+ 
+  // const { cart } = useCart();
+  // const cartItemCount = cart.length;
+ 
   // Fetch images mappings
   useEffect(() => {
     const loadImageMappings = async () => {
@@ -78,7 +81,7 @@ const SubCategory: React.FC = () => {
     };
     loadImageMappings();
   }, []);
-
+ 
   // Fetch CustomerID from AsyncStorage
   useEffect(() => {
     const fetchCustomerID = async () => {
@@ -99,27 +102,27 @@ const SubCategory: React.FC = () => {
         setError("Failed to fetch Customer ID");
       }
     };
-
+ 
     fetchCustomerID();
   }, []);
-
+ 
   // Fetch subcategories
   useEffect(() => {
     if (CustomerID && route.params.categoryId) {
       fetchSubCategories();
     }
   }, [CustomerID, route.params.categoryId]);
-
+ 
   const fetchSubCategories = useCallback(async () => {
     if (!CustomerID || !route.params.categoryId) {
       console.log("Waiting for CustomerID or categoryId...");
       return;
     }
-
+ 
     try {
       setLoading(true);
       setError(null);
-
+ 
       const response = await axios.post(
         `${BACKEND_URL}/sf/getItemCatSubCat`,
         {
@@ -129,23 +132,19 @@ const SubCategory: React.FC = () => {
           timeout: 10000
         }
       );
-
+ 
       if (response.data && response.data.output) {
-        // console.log('Total items received:', response.data.output.length);
-        // console.log('Category ID to filter:', route.params.categoryId);
-
-        const filteredSubCategories = response.data.output.filter((item: SubCategoryItem) => 
+        const filteredSubCategories = response.data.output.filter((item: SubCategoryItem) =>
           item.CATID === route.params.categoryId
         );
-
-        // console.log('Filtered subcategories:', filteredSubCategories.length);
-
+ 
         const uniqueSubCategories = filteredSubCategories.map((item: SubCategoryItem) => ({
           ...item,
+          CustomerID: CustomerID || '', // Ensure CustomerID is always a string
           subcategoryImage: formatImageName(item.SUBCATID, false),
           imageUrl: getSubcategoryImage(item.SUBCATID)
         }));
-
+ 
         setSubCategories(uniqueSubCategories);
         setFilteredSubCategories(uniqueSubCategories);
       } else {
@@ -174,7 +173,7 @@ const SubCategory: React.FC = () => {
       setRefreshing(false);
     }
   }, [CustomerID, route.params.categoryId]);
-
+ 
   const handleSearch = useCallback((text: string) => {
     setSearchQuery(text);
     const filtered = subCategories.filter((subcategory) =>
@@ -182,21 +181,28 @@ const SubCategory: React.FC = () => {
     );
     setFilteredSubCategories(filtered);
   }, [subCategories]);
-
-  
+ 
   const handleSubCategoryPress = useCallback((item: SubCategoryItem) => {
+    // Ensure CustomerID is passed to the next screen
+    console.log("Navigating to ItemDetailScreen with:", {
+      subcategoryId: item.SUBCATID,
+      subcategoryName: item.SUBCATDESC,
+      subcategoryImage: item.imageUrl,
+      customerID: item.CustomerID || CustomerID
+    });
+ 
     navigation.navigate('ItemDetailScreen', {
       subcategoryId: item.SUBCATID,
       subcategoryName: item.SUBCATDESC,
       subcategoryImage: item.imageUrl,
-      
+      customerID: item.CustomerID || CustomerID || ''
     });
-  }, [navigation]);
-   
-
+  }, [navigation, CustomerID]);
+ 
+ 
   const renderSubCategoryItem = useCallback(({ item }: { item: SubCategoryItem }) => {
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.card}
         activeOpacity={0.7}
         onPress={() => handleSubCategoryPress(item)}
@@ -207,11 +213,12 @@ const SubCategory: React.FC = () => {
             style={styles.cardImage}
             resizeMode="contain"
             onError={(error) => {
-              console.warn(`Failed to load image for subcategory ${item.SUBCATID}:, error`);
+              console.warn(`Failed to load image for subcategory ${item.SUBCATID}:`, error);
             }}
           />
         </View>
         <View style={styles.cardContent}>
+          <Text style={styles.categoryCode}>{item.CustomerID}</Text>
           <Text style={styles.categoryCode}>{item.SUBCATCODE}</Text>
           <Text style={styles.categoryName} numberOfLines={2}>
             {item.SUBCATDESC}
@@ -220,7 +227,7 @@ const SubCategory: React.FC = () => {
       </TouchableOpacity>
     );
   }, [handleSubCategoryPress]);
-
+ 
   if (loading && !refreshing) {
     return (
       <View style={styles.centerContainer}>
@@ -228,12 +235,12 @@ const SubCategory: React.FC = () => {
       </View>
     );
   }
-
+ 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#ddd" />
       {/* <Header title={route.params.category} cartItemCount={cartItemCount} /> */}
-
+ 
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -245,7 +252,7 @@ const SubCategory: React.FC = () => {
           <MaterialIcons name="search" size={24} color="#000" />
         </TouchableOpacity>
       </View>
-
+ 
       <FlatList
         data={filteredSubCategories}
         renderItem={renderSubCategoryItem}
@@ -265,7 +272,7 @@ const SubCategory: React.FC = () => {
     </SafeAreaView>
   );
 };
-
+ 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -343,5 +350,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
+ 
 export default SubCategory;
+ 
+ 

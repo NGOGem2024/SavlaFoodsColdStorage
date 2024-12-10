@@ -1,8 +1,6 @@
-
-//nandini
 import { NavigationProp, RouteProp } from "@react-navigation/native";
 import axios from "axios";
-import { CreditCard, Grid, MoreVertical, Search } from "lucide-react-native";
+import { CreditCard, Grid, Search } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -17,11 +15,11 @@ import {
   View
 } from "react-native";
 import { MainStackParamList } from "../../App";
-import QuantitySelectModal from './QuantitySelectorModal';
+import QuantitySelectorModal from './QuantitySelectorModal';
 
-const BACKEND_URL = "http://192.168.1.3:3000/sf";
+const BACKEND_URL = "http://192.168.1.37:3000/sf";
 
-// Keep existing interfaces
+// Updated interfaces
 interface ItemDetails {
   DESCRIPTION: string;
   ITEM_CODE: string;
@@ -29,17 +27,9 @@ interface ItemDetails {
   ITEM_NAME: string;
   ITEM_SUB_CATEGORY_ID: number;
 }
-interface Item {
-  ITEM_ID: number;
-  ITEM_CODE: string;
-  DESCRIPTION: string;
-  ITEM_NAME: string;
-  BALANCE_QTY_SUM: number;
-}
 
 interface StockDetails {
   LOT_NO: string | null;
-  // FK_UNIT_ID: number | null;
   ITEM_MARKS: string | null;
   VAKAL_NO: string | null;
   BATCH_NO: string | null;
@@ -52,7 +42,10 @@ interface StockDetails {
 }
 
 interface APIResponse {
-  input: { ItemID: number };
+  input: {
+    ItemID: number;
+    customerID: string | number;
+  };
   output: {
     itemDetails: ItemDetails;
     stockDetails: StockDetails[];
@@ -69,8 +62,10 @@ interface ItemDetailsExpandedProps {
   route: ItemDetailsExpandedRouteProp;
   navigation: ItemDetailsExpandedNavigationProp;
 }
- 
+
 const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, navigation }) => {
+  // Get customerID from route params
+  const customerID = route.params?.customerID;
   const [itemDetails, setItemDetails] = useState<ItemDetails | null>(null);
   const [stockDetails, setStockDetails] = useState<StockDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,11 +77,56 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
   const [cartAnimations, setCartAnimations] = useState<{
     [key: string]: Animated.Value;
   }>({});
-  const [quantity, setQuantity] = useState("");
-  const [selectedLotNo, setSelectedLotNo] = useState<string | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-  const [addedToCart, setAddedToCart] = useState<{ [key: number]: number }>({});
+  const [selectedLotNo, setSelectedLotNo] = useState<string | null>(null);
+
+  const [selectedStockItem, setSelectedStockItem] = useState<{
+    item_id: number;
+    item_name: string;
+    lot_no: string;
+    available_qty: number;
+    unit_name: string;
+    vakal_no:string;
+    customerID?: number | string;
+    item_marks:string;
+  } | null>(null);
+
+  const handleAddToCart = (lotNo: string | null) => {
+    if (!lotNo) {
+      Alert.alert("Error", "Invalid Lot Number");
+      return;
+    }
+
+    // Find the selected stock item
+    const selectedStock = stockDetails.find(stock => stock.LOT_NO === lotNo);
+
+    if (!selectedStock) {
+      Alert.alert("Error", "Stock item not found");
+      return;
+    }
+
+    // Animate cart button
+    Animated.timing(cartAnimations[lotNo], {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+
+    // Prepare the item for the modal
+    setSelectedStockItem({
+      item_id: itemDetails?.ITEM_ID || 0,
+      item_name: itemDetails?.ITEM_NAME || '',
+      lot_no: lotNo,
+      available_qty: selectedStock.AVAILABLE_QTY || 0,
+      unit_name: selectedStock.UNIT_NAME || '',
+      customerID: customerID,
+      vakal_no: selectedStock.VAKAL_NO || '', // Add Vakal No
+      item_marks: selectedStock.ITEM_MARKS || '', // Add Item Marks
+    });
+
+    // Open the modal
+    setModalVisible(true);
+  };
 
   useEffect(() => {
     const animations: { [key: string]: Animated.Value } = {};
@@ -96,47 +136,19 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
     setCartAnimations(animations);
   }, [stockDetails]);
 
-   // Add cart functionality
-   const handleAddToCart = (lotNo: string | null) => {
-    if (!lotNo) return;
-    
-    // Trigger animation
-    Animated.sequence([
-      Animated.timing(cartAnimations[lotNo], {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cartAnimations[lotNo], {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  
-    setSelectedLotNo(lotNo);
-    setModalVisible(true);
-  };
-
-
-
-  const handleConfirmQuantity = () => {
-    console.log("Item added to cart with quantity:", quantity);
-    console.log("Lot No:", selectedLotNo);
-    setModalVisible(false);
-    setQuantity("");
-    setSelectedLotNo(null);
-  };
-
   const fetchStockDetails = async (showLoader = true) => {
     if (showLoader) setLoading(true);
     setError(null);
 
     try {
       const { ItemID } = route.params;
+
       const response = await axios.post<APIResponse>(
         `${BACKEND_URL}/getItemDetailsWithStock`,
-        { ItemID },
+        {
+          ItemID,
+          CustomerID: customerID
+        },
         {
           headers: {
             "Content-Type": "application/json",
@@ -145,14 +157,16 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
           timeout: 10000,
         }
       );
+
       console.log("Response received:", response.data);
 
       if (response.data?.output) {
-        const { stockDetails } = response.data.output;
+        const { stockDetails, itemDetails } = response.data.output;
         if (!stockDetails || stockDetails.length === 0) {
           setError("No stock details available");
           setStockDetails([]);
         } else {
+          setItemDetails(itemDetails);
           setStockDetails(stockDetails);
           setError(null);
         }
@@ -172,13 +186,13 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
   };
 
   useEffect(() => {
-    if (!route.params?.ItemID) {
-      setError("Invalid item ID");
+    if (!route.params?.ItemID || !customerID) {
+      setError("Invalid item ID or customer ID");
       setLoading(false);
       return;
     }
     fetchStockDetails();
-  }, [route.params.ItemID]);
+  }, [route.params.ItemID, customerID]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -194,6 +208,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
       useNativeDriver: true,
     }).start();
   };
+
 
   const formatDate = (dateString: string | null) => {
     if (!dateString || dateString === "null") return ""; // Return empty string instead of 'N/A'
@@ -263,17 +278,17 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
           ]}
           onLayout={() => fadeIn(index)}
         >
-          <View style={styles.stockHeader}>             
-            
-<View style={styles.lotNoContainer}>
-  <Text style={styles.lotNoLabel}>LOT NO : </Text>
-  <TouchableOpacity
-    style={styles.lotNoValueContainer}
-    onPress={() => navigation.navigate('LotReportScreen')}
-  >
-    <Text style={styles.lotNoValue}>{stock.LOT_NO || "N/A"}</Text>
-  </TouchableOpacity>
-</View>
+          <View style={styles.stockHeader}>
+
+            <View style={styles.lotNoContainer}>
+              <Text style={styles.lotNoLabel}>LOT NO : </Text>
+              <TouchableOpacity
+                style={styles.lotNoValueContainer}
+                onPress={() => navigation.navigate('LotReportScreen')}
+              >
+                <Text style={styles.lotNoValue}>{stock.LOT_NO || "N/A"}</Text>
+              </TouchableOpacity>
+            </View>
 
             <Animated.View
               style={[
@@ -300,7 +315,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
                 {/* <Text style={styles.addToCartText}>Add</Text> */}
               </TouchableOpacity>
             </Animated.View>
-            
+
             {/* <View style={styles.quantityContainer}>
               <Text style={styles.quantityValue}>
                 {formatQuantity(stock.AVAILABLE_QTY)}
@@ -339,21 +354,21 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
             </View>
             <View style={styles.detailRow}>
               <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>AVAILABLE Quantity</Text>
+                <Text style={styles.detailLabel}>Available Quantity</Text>
                 <Text style={styles.detailValue}>
                   {formatQuantity(stock.AVAILABLE_QTY)}
                 </Text>
               </View>
               <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Box Quantity</Text>
+                <Text style={styles.detailLabel}>Box Quantity</Text>
                 <Text style={styles.detailValue}>
                   {formatQuantity(stock.BOX_QUANTITY)}
                 </Text>
-                
+
               </View>
             </View>
             <View style={styles.detailRow}>
-            <View style={styles.detailItem}>
+              <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Expiry Date</Text>
                 <Text style={styles.detailValue}>
                   {formatDate(stock.EXPIRY_DATE)}
@@ -368,24 +383,16 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
         </Animated.View>
       ))}
 
-   
-       <QuantitySelectModal
-        isVisible={isModalVisible}
-        selectedLotNo={selectedLotNo}
-        stockDetails={stockDetails}
-        onClose={() => {
-          setModalVisible(false);
-          setSelectedLotNo(null);
-        } }
-        onConfirm={(quantity) => {
-          console.log('Item added to cart:', {
-            lotNo: selectedLotNo,
-            quantity: quantity
-          });          
-          setModalVisible(false);
-          setSelectedLotNo(null);
-          
-        } } itemName={""}/>         
+      {selectedStockItem && (
+        <QuantitySelectorModal
+          isVisible={isModalVisible}
+          item={selectedStockItem}
+          onClose={() => {
+            setModalVisible(false);
+            setSelectedStockItem(null);
+          }}
+        />
+      )}
     </ScrollView>
   );
 
@@ -399,7 +406,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
     >
       <View>
         <View style={styles.tableHeader}>
-          <Text style={[styles.tableHeaderCell, { width: 120 }]}>Lot No</Text>          
+          <Text style={[styles.tableHeaderCell, { width: 120 }]}>Lot No</Text>
           <Text style={[styles.tableHeaderCell, { width: 100 }]}>Quantity</Text>
           <Text style={[styles.tableHeaderCell, { width: 100 }]}>
             Unit Name
@@ -503,7 +510,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
   return (
     <View style={styles.mainContainer}>
       <View style={styles.headerContainer}>
-      
+
         <View style={styles.searchContainer}>
           <Search size={20} color="#6B7280" style={styles.searchIcon} />
           <TextInput
@@ -515,32 +522,32 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
           />
         </View>
         <View style={styles.rightHeaderSection}>
-        <View style={styles.toggleContainer}>
-          <TouchableOpacity
-            style={[
-              styles.toggleButton,
-              !isTableView && styles.toggleButtonActive,
-            ]}
-            onPress={() => setIsTableView(false)}
-          >
-            <CreditCard size={23} color={!isTableView ? "#F48221" : "#F48221"} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.toggleButton,
-              isTableView && styles.toggleButtonActive,
-            ]}
-            onPress={() => setIsTableView(true)}
-          >
-            <Grid size={23} color={isTableView ? "#007bff" : "#007bff"} />
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity 
+          <View style={styles.toggleContainer}>
+            <TouchableOpacity
+              style={[
+                styles.toggleButton,
+                !isTableView && styles.toggleButtonActive,
+              ]}
+              onPress={() => setIsTableView(false)}
+            >
+              <CreditCard size={23} color={!isTableView ? "#F48221" : "#F48221"} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.toggleButton,
+                isTableView && styles.toggleButtonActive,
+              ]}
+              onPress={() => setIsTableView(true)}
+            >
+              <Grid size={23} color={isTableView ? "#007bff" : "#007bff"} />
+            </TouchableOpacity>
+          </View>
+          {/* <TouchableOpacity
           style={styles.menuButton}
           onPress={() => navigation.navigate('PlaceOrderScreen')}
         >
           <MoreVertical size={24} color="#333" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         </View>
       </View>
 
@@ -649,7 +656,7 @@ const styles = StyleSheet.create({
   detailItem: {
     flex: 1,
     marginHorizontal: 8,
-    rowGap:-5
+    rowGap: -5
   },
   detailLabel: {
     color: "#F48221",
@@ -776,14 +783,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
-     
+
   },
   cartIconWrapper: {
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderRadius: 20,
   },
   cartIcon: {
-    fontSize: 20,     
+    fontSize: 20,
   },
   modalOverlay: {
     flex: 1,
@@ -814,18 +821,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#28a745",
     padding: 10,
     borderRadius: 5,
-    flexDirection:'row'
+    flexDirection: 'row'
   },
   confirmButtonText: {
     color: "white",
     fontWeight: "bold",
-    
+
   },
   confirmButtonText1: {
     color: "white",
     fontWeight: "bold",
-    
+
   },
 });
 
 export default ItemDetailsExpanded;
+
+

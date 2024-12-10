@@ -4,9 +4,11 @@ import { Dimensions, FlatList, Image, StyleSheet, View } from 'react-native';
 const { width } = Dimensions.get('window');
 
 const carouselData = [
-  { id: '3', image: require('../../assets/s3.png') },
-  { id: '1', image: require('../../assets/s1.png') },
-  { id: '2', image: require('../../assets/s2.png') },
+  { id: '3', image: require('../../assets/Carousel/c5.png') },
+  { id: '1', image: require('../../assets/Carousel/c4.png') },
+  { id: '2', image: require('../../assets/Carousel/s3.png') },
+  // { id: '2', image: require('../../assets/Carousel/c4.png') },
+  // { id: '2', image: require('../../assets/Carousel/c5.png') },
 ];
 
 const Carousel: React.FC = () => {
@@ -53,7 +55,7 @@ const Carousel: React.FC = () => {
 
 const styles = StyleSheet.create({
   carouselContainer: {
-    height: 160, // Reduced height
+    height: 170, // Reduced height
     marginTop: 0, // Removed top margin
     marginBottom: 10, // Added bottom margin for spacing
   },
