@@ -218,7 +218,7 @@ const SubCategory: React.FC = () => {
           />
         </View>
         <View style={styles.cardContent}>
-          <Text style={styles.categoryCode}>{item.CustomerID}</Text>
+          {/* <Text style={styles.categoryCode}>{item.CustomerID}</Text> */}
           <Text style={styles.categoryCode}>{item.SUBCATCODE}</Text>
           <Text style={styles.categoryName} numberOfLines={2}>
             {item.SUBCATDESC}

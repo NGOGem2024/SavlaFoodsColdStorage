@@ -21,6 +21,7 @@ const BACKEND_URL = "http://192.168.1.37:3000/sf";
 interface QuantitySelectorModalProps {
   isVisible: boolean;
   item: {
+    box_quantity: number;
     item_id: number;
     item_name: string;
     lot_no: string;
@@ -87,11 +88,7 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
       setInputValue((currentValue - 1).toString());
     }
   };
-
-
-
-
-// In QuantitySelectorModal.tsx
+ 
  
 // In QuantitySelectorModal.tsx
 const handleConfirm = async () => {
@@ -217,6 +214,9 @@ const handleConfirm = async () => {
             <Text style={styles.modalItemDetail}>
               Unit Name: <Text style={styles.modalItemDetail1}>{item.unit_name}</Text>
             </Text>
+            {/* <Text style={styles.modalItemDetail}>
+               Net  : <Text style={styles.modalItemDetail1}>{item.box_quantity}</Text>
+            </Text> */}
 
           </View>
 

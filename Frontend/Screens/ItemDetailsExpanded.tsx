@@ -85,6 +85,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
     item_name: string;
     lot_no: string;
     available_qty: number;
+    box_quantity: number;
     unit_name: string;
     vakal_no:string;
     customerID?: number | string;
@@ -118,6 +119,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
       item_name: itemDetails?.ITEM_NAME || '',
       lot_no: lotNo,
       available_qty: selectedStock.AVAILABLE_QTY || 0,
+      box_quantity: selectedStock.BOX_QUANTITY || 0,
       unit_name: selectedStock.UNIT_NAME || '',
       customerID: customerID,
       vakal_no: selectedStock.VAKAL_NO || '', // Add Vakal No
@@ -354,13 +356,13 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
             </View>
             <View style={styles.detailRow}>
               <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Available Quantity</Text>
+                <Text style={styles.detailLabel}>Balance Quantity</Text>
                 <Text style={styles.detailValue}>
                   {formatQuantity(stock.AVAILABLE_QTY)}
                 </Text>
               </View>
               <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Box Quantity</Text>
+                <Text style={styles.detailLabel}>Net Quantity</Text>
                 <Text style={styles.detailValue}>
                   {formatQuantity(stock.BOX_QUANTITY)}
                 </Text>

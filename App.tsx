@@ -206,6 +206,7 @@ export type MainStackParamList = {
       item_id: number;
       lot_no: string;
       available_qty: number;
+      box_quantity: number;
       customerID?: number | string;       
       vakal_no?: string;
       item_marks?: string;
@@ -216,11 +217,13 @@ export type MainStackParamList = {
       ItemID: number;
       LotNo: string;
       Quantity: number;
-      CustomerID?: number | string;
+      customerID?: number | string;
       item_name?: string;
       unit_name?: string;
       vakal_no?: string;
       item_marks?: string;
+      box_quantity:number;
+      
     }[];
   };
   SubCategory: {

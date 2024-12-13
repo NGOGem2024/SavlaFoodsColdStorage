@@ -239,6 +239,7 @@
 import React, { createContext, useState, useContext } from 'react';
 
 interface CartItem {
+  box_quantity: number;
   item_marks: string;
   vakal_no: string;
   vakkal_no: string;
@@ -269,6 +270,8 @@ export const CartProvider: React.FC<{children: React.ReactNode}> = ({ children }
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   const addToCart = (item: CartItem) => {
+
+    console.log('Adding to cart:', JSON.stringify(item, null, 2));
     setCartItems(prevItems => {
       // Check if item already exists
       const existingItemIndex = prevItems.findIndex(
