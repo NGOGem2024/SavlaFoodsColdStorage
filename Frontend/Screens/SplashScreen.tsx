@@ -49,10 +49,10 @@
 
 // export default SplashScreen;
 
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import React, { useEffect } from 'react';
-import { View, Image, StyleSheet ,Text} from 'react-native';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
- import { RootStackParamList } from '../type/types';
+import { Image, StyleSheet, Text, View } from 'react-native';
+import { RootStackParamList } from '../type/types';
 
 const SplashScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();

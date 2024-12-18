@@ -94,9 +94,9 @@ import {
   StackScreenProps,
 } from "@react-navigation/stack";
 import React from "react";
-import InwardsScreen from "./ExtraScreens/InwardsScreen";
 import ExpiringProductsScreen from "./ExtraScreens/ExpiringProductsScreen";
 import InvoicesScreen from "./ExtraScreens/InvoicesScreen";
+import InwardsScreen from "./ExtraScreens/InwardsScreen";
 import OrderPlacementScreen from "./ExtraScreens/OrderPlacementScreen";
 import OutwardsScreen from "./ExtraScreens/OutwardsScreen";
 import ProductSearchScreen from "./ExtraScreens/ProductSearchScreen";
@@ -105,16 +105,15 @@ import BottomTabNavigator from "./Frontend/Screens/BottomTabs/BottomTabNavigator
 import { CartProvider } from "./Frontend/Screens/contexts/CartContext";
 import { DisplayNameProvider } from "./Frontend/Screens/contexts/DisplayNameContext";
 import { NotificationProvider } from "./Frontend/Screens/contexts/NotificationContext";
-import HomeScreen from "./Frontend/Screens/HomeScreen";
 import ItemDetailScreen from "./Frontend/Screens/ItemDetailScreen";
 import ItemDetailsExpanded from "./Frontend/Screens/ItemDetailsExpanded";
 import LotReportScreen from "./Frontend/Screens/LotReportScreen";
 import OtpVerification from "./Frontend/Screens/OtpVerificationScreen";
 import PlaceOrderScreen from "./Frontend/Screens/PlaceOrderScreen";
+import QuantitySelectorModal from "./Frontend/Screens/QuantitySelectorModal";
 import SplashScreen from "./Frontend/Screens/SplashScreen";
 import StocksScreen from "./Frontend/Screens/StocksScreen";
 import SubCategory from "./Frontend/Screens/SubCategory";
-import QuantitySelectorModal from "./Frontend/Screens/QuantitySelectorModal";
 // import { Item } from './Frontend/type/types'
 // import {CartItem} from '././Frontend/type/types'
 
@@ -171,21 +170,21 @@ interface Item {
 export type RootStackParamList = {
   SplashScreen: undefined;
   OtpVerificationScreen: {
-    customerID:string;
+    customerID: number | string;
   };
   Main: {
     screen: string; // Screen name in the nested navigator
     params?: {
       initialLogin?: boolean;
-      customerID?: string;
+      customerID?:  number | string;
     };
   };
   HomeScreen: {
     switchedAccount?: boolean;
-    newCustomerId?: string;
+    newCustomerId?:  number | string;
     timestamp?: number;
     initialLogin?: boolean;
-    customerID?: string;
+    customerID?:  number | string;
   };
 };
  
@@ -209,36 +208,40 @@ export type MainStackParamList = {
       customerID?: number | string;       
       vakal_no?: string;
       item_marks?: string;
+      box_quantity:number;
     };
   };
   PlaceOrderScreen: {
-    selectedItems: {
+    selectedItems: Array<{
       ItemID: number;
       LotNo: string;
       Quantity: number;
-      CustomerID?: number | string;
+      customerID:  number | string;
       item_name?: string;
       unit_name?: string;
       vakal_no?: string;
       item_marks?: string;
-    }[];
+      box_quantity: number;
+    }>;
+    customerID:  number | string;
   };
+
   SubCategory: {
     category: string;
     categoryId: string;
-    customerID:string;
+    customerID: number | string;
     subcategoryImage:string;
   };
   ItemDetailScreen: {
     subcategoryId: string;
     subcategoryName: string;
     subcategoryImage: string;
-    customerID:string;
+    customerID: number | string;
   };
   ItemDetailsExpanded: {
     ItemID: number;
     itemName: string;
-    customerID:string;
+    customerID: number | string;
      
   };
   CartScreen: undefined;

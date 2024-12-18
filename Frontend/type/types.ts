@@ -77,3 +77,36 @@ export type RootStackNavProps<T extends keyof RootStackParamList> = {
 type CartItem = Item & {
   quantity: number;
 };
+
+
+// types.ts
+export interface BaseOrderItem {
+  ItemID: number;
+  LotNo: string;
+  Quantity: number;
+  customerID?: string | number;
+  item_name?: string;
+  unit_name?: string;
+  vakal_no?: string;
+  item_marks?: string;
+  box_quantity: number;
+}
+
+export interface MobileOrderItem extends BaseOrderItem {
+  ITEM_NAME: string;
+  LOT_NO: string;
+  ITEM_ID: number;
+  VAKAL_NO: string;
+  ITEM_MARKS: string;
+  UNIT_NAME: string;
+  BOX_QUANTITY: number;
+  BALANCE_QTY: number;
+  UPDATED_QTY: number[];
+  ORDERED_QUANTITY: number;
+}
+
+export interface OrderResponse {
+  success: boolean;
+  message: string;
+  orderId?: number;
+}

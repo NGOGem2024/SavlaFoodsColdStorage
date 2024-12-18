@@ -19,9 +19,8 @@ import {
   View
 } from 'react-native';
 import { fetchImageMappings, formatImageName, getSubcategoryImage, ImageMapping } from '../utils/imageRegistry';
-import { useCart } from './contexts/CartContext';
  
-const BACKEND_URL = "http://192.168.1.37:3000";
+const BACKEND_URL = "http://192.168.1.3:3000";
  
 type RootStackParamList = {
   SubCategory: {
@@ -32,7 +31,7 @@ type RootStackParamList = {
     subcategoryId: string;
     subcategoryName: string;
     subcategoryImage: string;
-    customerID: string;
+    customerID:  number | string;
 };
 };
  

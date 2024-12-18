@@ -815,7 +815,7 @@ interface AccountItem {
   label: string;
   value: string;
   default?: boolean;
-  customerId: number;
+  customerId:  number | string;
   groupId: number;
 }
 

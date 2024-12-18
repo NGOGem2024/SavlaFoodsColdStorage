@@ -18,7 +18,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { MainStackParamList } from "../../App";
  
-const BACKEND_URL = "http://192.168.1.37:3000/sf";
+const BACKEND_URL = "http://192.168.1.3:3000/sf";
 const { width } = Dimensions.get("window");
  
 interface Item {
@@ -27,7 +27,7 @@ interface Item {
   ITEM_CODE: string;
   DESCRIPTION: string;
   ITEM_NAME: string;
-  customerID : string;
+  customerID :  number | string;
 }
  
 type ItemDetailScreenRouteProp = RouteProp<MainStackParamList, "ItemDetailScreen">;

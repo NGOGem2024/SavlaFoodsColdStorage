@@ -17,7 +17,7 @@ import {
 import { MainStackParamList } from "../../App";
 import QuantitySelectorModal from './QuantitySelectorModal';
 
-const BACKEND_URL = "http://192.168.1.37:3000/sf";
+const BACKEND_URL = "http://192.168.1.3:3000/sf";
 
 // Updated interfaces
 interface ItemDetails {
@@ -85,11 +85,14 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
     item_name: string;
     lot_no: string;
     available_qty: number;
+    box_quantity:number;
     unit_name: string;
     vakal_no:string;
     customerID?: number | string;
     item_marks:string;
   } | null>(null);
+
+
 
   const handleAddToCart = (lotNo: string | null) => {
     if (!lotNo) {
@@ -118,6 +121,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
       item_name: itemDetails?.ITEM_NAME || '',
       lot_no: lotNo,
       available_qty: selectedStock.AVAILABLE_QTY || 0,
+      box_quantity: selectedStock.BOX_QUANTITY || 0,
       unit_name: selectedStock.UNIT_NAME || '',
       customerID: customerID,
       vakal_no: selectedStock.VAKAL_NO || '', // Add Vakal No
@@ -136,13 +140,16 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
     setCartAnimations(animations);
   }, [stockDetails]);
 
+
+
   const fetchStockDetails = async (showLoader = true) => {
     if (showLoader) setLoading(true);
     setError(null);
 
     try {
       const { ItemID } = route.params;
-
+      
+      console.log(ItemID)
       const response = await axios.post<APIResponse>(
         `${BACKEND_URL}/getItemDetailsWithStock`,
         {
@@ -197,6 +204,38 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
   const onRefresh = () => {
     setRefreshing(true);
     fetchStockDetails(false);
+  };
+
+  
+  useEffect(() => {
+    if (!route.params?.ItemID || !customerID) {
+      setError("Invalid item ID or customer ID");
+      setLoading(false);
+      return;
+    }
+
+    // Check if there's a net quantity update from order placement
+    if (route.params?.shouldRefresh) {
+      const { updatedNetQuantity } = route.params;
+      
+      if (updatedNetQuantity !== undefined) {
+        // Update the stock details with the new net quantity
+        updateStockDetailsWithNetQuantity(updatedNetQuantity);
+      } else {
+        fetchStockDetails();
+      }
+    } else {
+      fetchStockDetails();
+    }
+  }, [route.params?.ItemID, customerID, route.params?.shouldRefresh]);
+
+  const updateStockDetailsWithNetQuantity = (netQuantity: number) => {
+    setStockDetails(prevStockDetails => 
+      prevStockDetails.map(stock => ({
+        ...stock,
+        AVAILABLE_QTY: netQuantity
+      }))
+    );
   };
   // Keep existing fetchStockDetails, useEffect, and other utility functions
 
@@ -359,13 +398,13 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
                   {formatQuantity(stock.AVAILABLE_QTY)}
                 </Text>
               </View>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Box Quantity</Text>
+              {/* <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Available Quantity</Text>
                 <Text style={styles.detailValue}>
                   {formatQuantity(stock.BOX_QUANTITY)}
-                </Text>
+                </Text> */}
 
-              </View>
+              {/* </View> */}
             </View>
             <View style={styles.detailRow}>
               <View style={styles.detailItem}>
@@ -423,19 +462,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
         </View>
         <ScrollView>
           {filteredStockDetails.map((stock, index) => (
-            //   <View key={index} style={styles.tableRow}>
-            //     <Text style={[styles.tableCell, styles.lotNoTableCell, { width: 120 }]}>
-            //       {stock.LOT_NO || 'N/A'}
-            //     </Text>
-            //     <Text style={[styles.tableCell, styles.quantityTableCell, { width: 100 }]}>
-            //       {formatQuantity(stock.AVAILABLE_QTY)}
-            //     </Text>
-            //     <Text style={[styles.tableCell, { width: 100 }]}>{stock.UNIT_NAME || 'N/A'}</Text>
-            //     <Text style={[styles.tableCell, { width: 120 }]}>{stock.BATCH_NO || 'N/A'}</Text>
-            //     <Text style={[styles.tableCell, { width: 100 }]}>{formatQuantity(stock.BOX_QUANTITY)}</Text>
-            //     <Text style={[styles.tableCell, { width: 150 }]}>{formatDate(stock.EXPIRY_DATE)}</Text>
-            //     <Text style={[styles.tableCell, { width: 100 }]}>{stock.STATUS || 'N/A'}</Text>
-            //   </View>
+           
 
             <View key={index} style={styles.tableRow}>
               <View style={[styles.tableCellContainer, { width: 120 }]}>
@@ -506,6 +533,9 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
       </View>
     );
   }
+
+
+
 
   return (
     <View style={styles.mainContainer}>

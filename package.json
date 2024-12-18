@@ -21,7 +21,7 @@
     "@react-navigation/stack": "^6.4.1",
     "axios": "^1.7.7",
     "bcryptjs": "^2.4.3",
-    "expo": "^52.0.14",
+    "expo": "^52.0.17",
     "expo-firebase-recaptcha": "^2.3.1",
     "expo-linear-gradient": "^14.0.1",
     "expo-router": "^4.0.11",
@@ -41,7 +41,7 @@
     "react-native-screens": "^4.1.0",
     "react-native-snap-carousel": "^3.9.1",
     "react-native-vector-icons": "^10.2.0",
-    "react-native-webview": "^13.12.2",
+    "react-native-webview": "^13.12.5",
     "react-navigation": "^5.0.0"
   },
   "devDependencies": {
