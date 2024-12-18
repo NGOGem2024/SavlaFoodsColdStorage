@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // import { Ionicons } from '@expo/vector-icons';
 // import { RouteProp } from '@react-navigation/native';
 // import { StackNavigationProp } from '@react-navigation/stack';
@@ -496,6 +497,9 @@
  
  
 
+=======
+ 
+>>>>>>> 30e18c0fcd6fbb8dde0968d9c5e9358259bc5766
 
 import { Ionicons } from '@expo/vector-icons';
 import { RouteProp } from '@react-navigation/native';
@@ -517,7 +521,10 @@ import { useCart } from './contexts/CartContext';
 const BACKEND_URL = "http://192.168.1.3:3000/sf";
 
 interface OrderItem {
+<<<<<<< HEAD
   NET_QUANTITY: any;
+=======
+>>>>>>> 30e18c0fcd6fbb8dde0968d9c5e9358259bc5766
   ITEM_NAME: string;
   LOT_NO: string;
   ITEM_ID: number;
@@ -545,10 +552,28 @@ const PlaceOrderScreen: React.FC<PlaceOrderScreenProps> = ({ route, navigation }
 
   useEffect(() => {
     if (selectedItems.length > 0 || cartItems.length > 0) {
+<<<<<<< HEAD
       const combinedItems: OrderItem[] = [
         ...selectedItems,
         ...cartItems.map(cartItem => {
           const netQuantity = Math.max(0, (cartItem.available_qty || 0) - (cartItem.quantity || 0));
+=======
+    const combinedItems : OrderItem[]= [
+      ...selectedItems,
+      ...cartItems.map(cartItem => ({
+        LOT_NO: cartItem.lot_no || '',
+        ITEM_ID: cartItem.item_id,
+        ITEM_NAME: cartItem.item_name,
+        VAKAL_NO: cartItem.vakal_no, // You might want to fetch these details
+        ITEM_MARKS: cartItem.item_marks,
+        UNIT_NAME: cartItem.unit_name || '',
+        BOX_QUANTITY: cartItem.box_quantity || 0,
+        BALANCE_QTY: cartItem.available_qty || 0,
+        UPDATED_QTY: [cartItem.quantity],
+        ORDERED_QUANTITY: cartItem.quantity || 0
+      } as OrderItem))
+    ];
+>>>>>>> 30e18c0fcd6fbb8dde0968d9c5e9358259bc5766
 
           return {
             LOT_NO: cartItem.lot_no || '',
@@ -703,6 +728,7 @@ const PlaceOrderScreen: React.FC<PlaceOrderScreenProps> = ({ route, navigation }
       </View>
  
       <View style={styles.orderItemDetails}>
+<<<<<<< HEAD
         <View style={styles.detailColumn}>          
           <DetailRow label="Vakal No" value={item.VAKAL_NO} />
           <DetailRow label="Item Marks" value={item.ITEM_MARKS} />
@@ -712,6 +738,46 @@ const PlaceOrderScreen: React.FC<PlaceOrderScreenProps> = ({ route, navigation }
           <DetailRow label="Unit Name" value={item.UNIT_NAME} />
           <DetailRow label="Net Quantity" value={`${item.NET_QUANTITY}`} highlighted />
           <DetailRow label="Ordered Quantity" value={`${item.ORDERED_QUANTITY}`} />
+=======
+      <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Item Name:</Text>
+          <Text style={styles.detailValue}>{item.ITEM_NAME}</Text>
+        </View>
+
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Item ID:</Text>
+          <Text style={styles.detailValue}>{item.ITEM_ID}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Vakal No:</Text>
+          <Text style={styles.detailValue}>{item.VAKAL_NO}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Item Marks:</Text>
+          <Text style={styles.detailValue}>{item.ITEM_MARKS}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Unit Name:</Text>
+          <Text style={styles.detailValue}>{item.UNIT_NAME}</Text>
+        </View>
+        -
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Net Quantity:</Text>
+          <Text style={styles.detailValue}>{item.BOX_QUANTITY}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Balance Quantity:</Text>
+          <Text style={styles.detailValue}>{item.BALANCE_QTY}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Ordered Quantity:</Text>
+          <Text style={styles.detailValue}>{item.ORDERED_QUANTITY}</Text>
+>>>>>>> 30e18c0fcd6fbb8dde0968d9c5e9358259bc5766
         </View>
       </View>
     </View>

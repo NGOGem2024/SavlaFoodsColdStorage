@@ -1,8 +1,15 @@
 import React, { createContext, useContext, useState } from 'react';
 
 interface CartItem {
+<<<<<<< HEAD
   customerID: number | string;
   lot_no: string;
+=======
+  box_quantity: number;
+  item_marks: string;
+  vakal_no: string;
+  vakkal_no: string;
+>>>>>>> 30e18c0fcd6fbb8dde0968d9c5e9358259bc5766
   item_id: number;
   item_name: string;
   vakal_no: string;
@@ -27,12 +34,31 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   const addToCart = (item: CartItem) => {
+<<<<<<< HEAD
     setCartItems(prev => {
       const existingItem = prev.find(i => i.lot_no === item.lot_no);
       if (existingItem) {
         return prev.map(i =>
           i.lot_no === item.lot_no ? { ...i, quantity: item.quantity } : i
         );
+=======
+
+    console.log('Adding to cart:', JSON.stringify(item, null, 2));
+    setCartItems(prevItems => {
+      // Check if item already exists
+      const existingItemIndex = prevItems.findIndex(
+        cartItem => cartItem.lot_no === item.lot_no
+      );
+
+      if (existingItemIndex > -1) {
+        // Update quantity if item exists
+        const updatedItems = [...prevItems];
+        updatedItems[existingItemIndex] = {
+          ...updatedItems[existingItemIndex],
+          quantity: updatedItems[existingItemIndex].quantity + item.quantity
+        };
+        return updatedItems;
+>>>>>>> 30e18c0fcd6fbb8dde0968d9c5e9358259bc5766
       }
       return [...prev, item];
     });

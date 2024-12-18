@@ -34,6 +34,7 @@ const BottomTabNavigator: React.FC = () => {
         tabBarInactiveTintColor: 'black',
         tabBarStyle: styles.tabBar,
         headerShown: false,
+        tabBarHideOnKeyboard:true,
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />

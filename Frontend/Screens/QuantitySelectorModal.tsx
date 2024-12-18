@@ -20,6 +20,7 @@ const BACKEND_URL = "http://192.168.1.3:3000/sf";
 interface QuantitySelectorModalProps {
   isVisible: boolean;
   item: {
+    box_quantity: number;
     item_id: number;
     item_name: string;
     lot_no: string;
@@ -84,11 +85,75 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
       setInputValue((currentValue - 1).toString());
     }
   };
+<<<<<<< HEAD
 
   const handleConfirm = () => {
     const quantity = parseInt(inputValue) || 0;
    
     if (quantity <= 0) {
+=======
+ 
+ 
+// In QuantitySelectorModal.tsx
+const handleConfirm = async () => {
+  const quantity = parseInt(inputValue) || 0;
+  
+  if (quantity <= 0) {
+    Alert.alert(
+      'Invalid Quantity',
+      'Please enter a quantity greater than 0'
+    );
+    setInputValue('1');
+    return;
+  }
+
+  if (quantity > maxQuantity) {
+    Alert.alert(
+      'Invalid Quantity',
+      `Please select a quantity between 1 and ${maxQuantity}`
+    );
+    return;
+  }
+
+  try {
+    const response = await axios.post(`${BACKEND_URL}/getItemDetailsAndUpdateStock`, {
+      LotNo: item.lot_no,
+      CustomerID: item.customerID, 
+      ItemID: item.item_id,
+      Quantity: quantity
+    });
+
+     
+      
+    if (response.data.success) {
+
+      console.log('Vakal No:', response.data.data.VAKAL_NO);
+      console.log('Item Marks:', response.data.data.ITEM_MARKS);
+      // Create a complete order item object
+      const orderItem = {
+        LOT_NO: item.lot_no,
+        ITEM_ID: item.item_id,
+        ITEM_NAME: item.item_name,
+        VAKAL_NO: item.vakal_no || response.data.data.VAKAL_NO || '',
+        ITEM_MARKS: item.item_marks || response.data.data.ITEM_MARKS || '',
+        // VAKAL_NO: response.data.data.VAKAL_NO || '',
+        // ITEM_MARKS: response.data.data.ITEM_MARKS || '',
+        UNIT_NAME: item.unit_name,
+        BOX_QUANTITY: response.data.data.BOX_QUANTITY || 0,
+        BALANCE_QTY: response.data.data.BALANCE_QTY || 0,
+        UPDATED_QTY: [quantity],
+        ORDERED_QUANTITY: quantity
+      };
+
+      // Add to cart 
+      addToCart({
+        ...item,
+        quantity,
+        
+      });
+
+      // Display the popup
+>>>>>>> 30e18c0fcd6fbb8dde0968d9c5e9358259bc5766
       Alert.alert(
         'Invalid Quantity',
         'Please enter a quantity greater than 0'
@@ -183,6 +248,13 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
             <Text style={styles.modalItemDetail}>
               Unit Name: <Text style={styles.modalItemDetail1}>{item.unit_name}</Text>
             </Text>
+<<<<<<< HEAD
+=======
+            {/* <Text style={styles.modalItemDetail}>
+               Net  : <Text style={styles.modalItemDetail1}>{item.box_quantity}</Text>
+            </Text> */}
+
+>>>>>>> 30e18c0fcd6fbb8dde0968d9c5e9358259bc5766
           </View>
 
           <View style={styles.quantitySelector}>
