@@ -6,6 +6,7 @@ import AnnouncementScreen from './AnnouncementScreen';
 import ReportScreen from './ReportScreen';
 import AlertScreen from './AlertScreen';
 import { MaterialIcons } from '@expo/vector-icons';
+import OrderHistoryScreen from '../OrderHistoryScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -41,6 +42,15 @@ const BottomTabNavigator: React.FC = () => {
       <Tab.Screen name="Announcement" component={AnnouncementScreen} options={{headerShown:true}}/>
       <Tab.Screen name="Report" component={ReportScreen} />
       <Tab.Screen name="Alert" component={AlertScreen} />
+      <Tab.Screen 
+        name="OrderHistory" 
+        component={OrderHistoryScreen} 
+        options={{ 
+          title: 'Order History',
+          headerStyle: { backgroundColor: '#f5f5f5' },
+          headerTitleStyle: { fontWeight: 'bold' }
+        }}
+      />
     </Tab.Navigator>
   );
 };

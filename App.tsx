@@ -192,7 +192,10 @@ export type RootStackParamList = {
  
 // Separate type for main stack params
 export type MainStackParamList = {
-  BottomTabNavigator: undefined;
+  BottomTabNavigator: {
+    customerID:string;
+    shouldRefresh:boolean;
+  };
   StocksScreen: undefined;
   InwardsScreen: undefined;
   OutwardScreen: undefined;
@@ -206,7 +209,7 @@ export type MainStackParamList = {
       item_id: number;
       lot_no: string;
       available_qty: number;
-      box_quantity: number;
+      // box_quantity: number;
       customerID?: number | string;       
       vakal_no?: string;
       item_marks?: string;
@@ -214,6 +217,11 @@ export type MainStackParamList = {
   };
   PlaceOrderScreen: {
     selectedItems: {
+      LOT_NO: string;
+      VAKAL_NO: string;
+      BALANCE_QTY: any;
+      AVAILABLE_QTY: any;
+      ORDERED_QUANTITY: number;
       ItemID: number;
       LotNo: string;
       Quantity: number;
@@ -222,9 +230,11 @@ export type MainStackParamList = {
       unit_name?: string;
       vakal_no?: string;
       item_marks?: string;
-      box_quantity:number;
-      
+      // box_quantity:number;
+      net_quantity:number;
     }[];
+    shouldRefresh:boolean;
+    customerID?: number | string;
   };
   SubCategory: {
     category: string;
@@ -242,7 +252,18 @@ export type MainStackParamList = {
     ItemID: number;
     itemName: string;
     customerID:string;
-     
+       updatedStockDetails?: {
+      LOT_NO: string;
+      ITEM_ID: number;
+      VAKAL_NO: string;
+      ITEM_MARKS: string;
+      UNIT_NAME: string | null;
+      AVAILABLE_QUANTITY: number;
+      NET_QUANTITY: number;
+      ORDERED_QUANTITY: number;
+      
+    }[];
+    forceRefresh?: number;
   };
   CartScreen: undefined;
   LotReportScreen: undefined;
@@ -261,79 +282,7 @@ export type MainStackScreenProps<T extends keyof MainStackParamList> =
 export type RootStackScreenProps<T extends keyof RootStackParamList> =
   StackScreenProps<RootStackParamList, T>;
 
-// const MainStackNavigator: React.FC = () => {
-//   return (
-//     <MainStack.Navigator>
-//       <MainStack.Screen
-//         name="BottomTabNavigator"
-//         component={BottomTabNavigator}
-//         options={{ headerShown: false }}
-//       />
-//       <MainStack.Screen name="StocksScreen" component={StocksScreen} />
-//       <MainStack.Screen name="InwardsScreen" component={InwardsScreen} />
-//       <MainStack.Screen name="OutwardScreen" component={OutwardsScreen} />
-//       <MainStack.Screen name="ExpiringProducts" component={ExpiringProductsScreen} />
-//       <MainStack.Screen name="Invoices" component={InvoicesScreen} />
-//       <MainStack.Screen name="ProductSearchScreen" component={ProductSearchScreen} />
-//       <MainStack.Screen name="OrderPlacementScreen" component={OrderPlacementScreen} />
-//       <MainStack.Screen name="PlaceOrderScreen" component={PlaceOrderScreen} />
-//       <MainStack.Screen name="SubCategory" component={SubCategory}
-//       options={({route}) => ({
-//         title:route.params.category
-//       })}/>
-//       <MainStack.Screen
-//         name="ItemDetailScreen"
-//         component={ItemDetailScreen}
-//         options={({ route }) => ({
-//           title: route.params.subcategoryName
-//         })}
-//       />
-//       <MainStack.Screen
-//         name="ItemDetailsExpanded"
-//         component={ItemDetailsExpanded}
-//         options={({ route}) => ({
-//           title: route.params.itemName
-//         })}
-//       />
-//       <MainStack.Screen name="CartScreen" component={CartScreen} />
-//       <MainStack.Screen
-//         name="LotReportScreen"
-//         component={LotReportScreen}
-//         options={{ title: 'Lot Report' }}
-//       />
-//     </MainStack.Navigator>
-//   );
-// };
-
-// const App: React.FC = () => {
-//   return (
-//     <NavigationContainer>
-//       <DisplayNameProvider>
-//         <NotificationProvider>
-//           <CartProvider>
-//             <RootStack.Navigator initialRouteName="SplashScreen">
-//               <RootStack.Screen
-//                 name="SplashScreen"
-//                 component={SplashScreen}
-//                 options={{ headerShown: false }}
-//               />
-//               <RootStack.Screen
-//                 name="OtpVerificationScreen"
-//                 component={OtpVerification}
-//                 options={{ headerShown: false }}
-//               />
-//               <RootStack.Screen
-//                 name="Main"
-//                 component={MainStackNavigator}
-//                 options={{ headerShown: false }}
-//               />
-//             </RootStack.Navigator>
-//           </CartProvider>
-//         </NotificationProvider>
-//       </DisplayNameProvider>
-//     </NavigationContainer>
-//   );
-// };
+ 
 
 const MainStackNavigator: React.FC = () => {
   return (

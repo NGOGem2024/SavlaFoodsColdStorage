@@ -119,6 +119,7 @@ const ItemDetailScreen: React.FC<ItemDetailScreenProps> = ({
       Alert.alert("Error", "Invalid item ID");
       return;
     }
+    console.log(item.ITEM_ID);
  
     navigation.navigate("ItemDetailsExpanded", {
       ItemID: item.ITEM_ID,

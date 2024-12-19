@@ -40,6 +40,8 @@ const OtpVerification: React.FC = () => {
       const response = await axios.post('http://192.168.1.37:3000/sf/getUserAccountID', {
         sf_userName: username,
         sf_userPwd: password
+
+  
       });
 
       if (response.data && response.data.output) {
