@@ -4,6 +4,80 @@ const jwt = require("jsonwebtoken");
 const oracledb = require("oracledb");
 const db = require("../config/database");
 
+
+const nodemailer = require('nodemailer');
+require('dotenv').config();
+
+// Email service configuration
+class EmailService {
+  constructor() {
+      this.transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_APP_PASSWORD
+          }
+      });
+  }
+
+  async sendOrderConfirmation(orderDetails, customerEmail, customerName, mobileNo) {
+      // Add email validation
+      if (!customerEmail || typeof customerEmail !== 'string' || !customerEmail.includes('@')) {
+          console.error('Invalid email address:', customerEmail);
+          throw new Error('Invalid email address');
+      }
+
+      // Debug log
+      console.log('Sending email to:', customerEmail);
+      console.log('Order details:', orderDetails);
+
+      const emailTemplate = {
+          from: process.env.EMAIL_USER,
+          to: customerEmail.trim(), // Trim any whitespace
+          subject: `Order Confirmation #${orderDetails.orderID}`,
+          html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                  <h1 style="color: #333; text-align: center;">Order Confirmation</h1>
+                  <p>Dear ${customerName || 'Valued Customer'},</p>
+                  <p>Your order #${orderDetails.orderID} has been successfully placed.</p>
+                  
+                  <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                      <h2 style="color: #444;">Order Details:</h2>
+                      <ul>
+                          ${orderDetails.items.map(item => `
+                              <li>Item ID: ${item.ItemID}<br>
+                               <li>Lot No: ${item.LotNo} <br>
+                               <li>Quantity: ${item.Quantity}</li>
+                          `).join('')}
+                      </ul>
+                  </div>
+
+                  <div style="margin-top: 30px; text-align: center; color: #666;">
+                      <p>Thank you for your order!</p>
+                      <p>If you have any questions, please contact our support team.</p>
+                  </div>
+              </div>
+          `
+      };
+
+      try {
+          // Debug log before sending
+          console.log('Email configuration:', {
+              from: emailTemplate.from,
+              to: emailTemplate.to,
+              subject: emailTemplate.subject
+          });
+
+          const info = await this.transporter.sendMail(emailTemplate);
+          console.log('Email sent successfully:', info.messageId);
+          return true;
+      } catch (error) {
+          console.error('Error sending email:', error);
+          throw error;
+      }
+  }
+}
+
 const JWT_SECRET =
   process.env.JWT_SECRET ||
   "JhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
@@ -86,8 +160,6 @@ const authController = {
       });
     }
   },
-
-  
 
   async listAccounts(req, res) {
     const { FK_CUST_GROUP_ID } = req.body;
@@ -461,49 +533,46 @@ const authController = {
     }
   },
 
+
+
+//try
 async getItemDetailsAndUpdateStock(req, res) {
   const { CustomerID, items } = req.body;
-
-  // Validate the presence and type of items
-  if (!Array.isArray(items)) {
-      return res.status(400).json({
-          success: false,
-          message: 'Items must be an array.',
-      });
-  }
-
-  // Validate if items array is not empty
-  if (items.length === 0) {
-      return res.status(400).json({
-          success: false,
-          message: 'Items array cannot be empty.',
-      });
-  }
-
+  const emailService = new EmailService();
   let connection;
+
   try {
       connection = await db.getConnection();
       await connection.execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
 
-      // Loop through each item and verify stock
+      // Get customer details
+      const customerQuery = `
+          SELECT email, disp_name, mobile_no
+          FROM customer_login1
+          WHERE fk_customer_id = :CustomerID
+      `;
+      const customerResult = await connection.execute(
+          customerQuery,
+          { CustomerID },
+          { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
+
+      if (!customerResult.rows[0]) {
+          throw new Error('Customer details not found');
+      }
+
+      const { EMAIL, DISP_NAME, MOBILE_NO } = customerResult.rows[0];
+
+      // Validate stock availability
       for (const item of items) {
           const { LotNo, ItemID, Quantity } = item;
-
-          if (!LotNo || !ItemID || !Quantity) {
-              return res.status(400).json({
-                  success: false,
-                  message: 'Each item must have LotNo, ItemID, and Quantity.',
-              });
-          }
-
-          // Verify stock availability
           const verifyStockQuery = `
               SELECT COUNT(*) AS count
               FROM stock_lotno
               WHERE fk_customer_id = :CustomerID
-                AND fk_item_id = :ItemID
-                AND lot_no = :LotNo
-                AND available_qty >= :Quantity
+                  AND fk_item_id = :ItemID
+                  AND lot_no = :LotNo
+                  AND available_qty >= :Quantity
           `;
           const stockResult = await connection.execute(
               verifyStockQuery,
@@ -521,56 +590,79 @@ async getItemDetailsAndUpdateStock(req, res) {
 
       // Generate Order ID
       const orderSeqQuery = `SELECT SYSTEM.ORDER_SEQ.NEXTVAL AS ORDER_ID FROM DUAL`;
-      const orderSeqResult = await connection.execute(orderSeqQuery, {}, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+      const orderSeqResult = await connection.execute(
+          orderSeqQuery,
+          {},
+          { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      );
       const orderID = orderSeqResult.rows[0].ORDER_ID;
 
-      // Insert the order into `savla_orders`
-      const insertOrderQuery = `
-          INSERT INTO savla_orders (
-              order_id, customerid, order_date
-          ) VALUES (
-              :OrderID, :CustomerID, SYSDATE
-          )
-      `;
-      const insertOrderBinds = {
-          OrderID: orderID,
-          CustomerID,
-      };
-      await connection.execute(insertOrderQuery, insertOrderBinds, { autoCommit: false });
-
-      // Loop through each item and update stock
+      // Insert order details for each item
       for (const item of items) {
           const { LotNo, ItemID, Quantity } = item;
+          
+          // Insert order with item details
+          const insertOrderQuery = `
+              INSERT INTO savla_order (
+                  order_id, customerid, order_date, item_id, quantity, lot_no
+              ) VALUES (
+                  :OrderID, :CustomerID, SYSDATE, :ItemID, :Quantity, :LotNo
+              )
+          `;
+          await connection.execute(
+              insertOrderQuery,
+              { 
+                  OrderID: orderID, 
+                  CustomerID, 
+                  ItemID, 
+                  Quantity, 
+                  LotNo 
+              },
+              { autoCommit: false }
+          );
 
-          // Update stock availability in stock_lotno
+          // Update stock
           const updateStockQuery = `
               UPDATE stock_lotno
               SET available_qty = available_qty - :Quantity
               WHERE fk_customer_id = :CustomerID
-                AND fk_item_id = :ItemID
-                AND lot_no = :LotNo
+                  AND fk_item_id = :ItemID
+                  AND lot_no = :LotNo
           `;
-          await connection.execute(updateStockQuery, {
-              Quantity,
-              CustomerID,
-              ItemID,
-              LotNo,
-          });
+          await connection.execute(
+              updateStockQuery,
+              { Quantity, CustomerID, ItemID, LotNo },
+              { autoCommit: false }
+          );
       }
 
-      // Commit transaction after all queries
+      // Send email if email exists and is valid
+      if (EMAIL) {
+          try {
+              await emailService.sendOrderConfirmation(
+                  { orderID, items },
+                  EMAIL,
+                  DISP_NAME,
+                  MOBILE_NO
+              );
+              console.log('Email notification sent successfully');
+          } catch (emailError) {
+              console.error('Error sending email notification:', emailError);
+          }
+      }
+
       await connection.commit();
 
       return res.status(200).json({
           success: true,
-          message: "Order placed successfully",
+          message: "Order placed successfully" + (EMAIL ? " and confirmation email sent" : ""),
           orderID,
       });
   } catch (error) {
       if (connection) {
           await connection.rollback();
       }
-      console.error("Error placing order:", error);
+      console.error("Error processing order:", error);
       return res.status(500).json({
           success: false,
           message: "Server error",
@@ -583,61 +675,57 @@ async getItemDetailsAndUpdateStock(req, res) {
   }
 },
 
-  async getOrderHistory(req, res) {
-    let connection;
-    try {
-      connection = await db.getConnection();
-      await connection.execute(
-        "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'"
-      );
-
-      const orderHistoryQuery = `
-        SELECT 
-          o.ORDER_ID,
-          o.LOT_NO,
-          o.ITEM_ID,
-          o.QUANTITY,
-          TO_CHAR(o.ORDER_DATE, 'YYYY-MM-DD HH24:MI:SS') as ORDER_DATE,
-          im.ITEM_NAME
-        FROM SYSTEM.savla_orders o
-        JOIN SYSTEM.ITEM_MASTER im ON o.ITEM_ID = im.ITEM_ID
-        ORDER BY o.ORDER_DATE DESC
-      `;
-
-      const result = await connection.execute(
-        orderHistoryQuery,
-        {},
-        { outFormat: oracledb.OUT_FORMAT_OBJECT }
-      );
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "No orders found",
-        });
-      }
-
-      res.status(200).json({
-        success: true,
-        data: result.rows,
-      });
-    } catch (error) {
-      console.error("Error in getOrderHistory:", error);
-      return res.status(500).json({
+ 
+async getOrderHistory(req, res) {
+  let connection;
+  try {
+    connection = await db.getConnection();
+    await connection.execute('ALTER SESSION SET NLS_DATE_FORMAT = \'YYYY-MM-DD HH24:MI:SS\'');
+ 
+    const orderHistoryQuery = `
+      SELECT
+        o.ORDER_ID,
+        o.LOT_NO,
+        o.ITEM_ID,
+        o.QUANTITY,
+        TO_CHAR(o.ORDER_DATE, 'YYYY-MM-DD HH24:MI:SS') as ORDER_DATE,
+        im.ITEM_NAME
+      FROM SYSTEM.savla_order o
+      JOIN SYSTEM.ITEM_MASTER im ON o.ITEM_ID = im.ITEM_ID
+      ORDER BY o.ORDER_DATE DESC
+    `;
+ 
+    const result = await connection.execute(orderHistoryQuery, {}, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+ 
+    if (result.rows.length === 0) {
+      return res.status(404).json({
         success: false,
-        message: "Server error",
-        error: error.message,
+        message: 'No orders found'
       });
-    } finally {
-      if (connection) {
-        try {
-          await connection.close();
-        } catch (error) {
-          console.error("Error closing connection:", error);
-        }
+    }
+ 
+    res.status(200).json({
+      success: true,
+      data: result.rows
+    });
+ 
+  } catch (error) {
+    console.error('Error in getOrderHistory:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (error) {
+        console.error('Error closing connection:', error);
       }
     }
   }
+}
 };
 
 module.exports = authController;
