@@ -1,134 +1,165 @@
-// import React, { useEffect, useState } from 'react';
-// import { 
-//   View, 
-//   Text, 
-//   StyleSheet, 
-//   FlatList, 
-//   ActivityIndicator, 
-//   RefreshControl 
-// } from 'react-native';
-// import { useFocusEffect } from '@react-navigation/native';
 // import axios from 'axios';
-// import { Ionicons } from '@expo/vector-icons';
-
-// const BACKEND_URL = "http://192.168.43.4:3000/sf";
+// import React, { useEffect, useState } from 'react';
+// import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 // interface OrderHistoryItem {
 //   ORDER_ID: number;
 //   LOT_NO: string;
 //   ITEM_ID: number;
-//   QUANTITY: number;
-//   ORDER_DATE: string;
 //   ITEM_NAME: string;
+//   ORDER_DATE: string;
+//   QUANTITY: number;
 // }
+
+// const BACKEND_URL = "http://192.168.1.3:3000/sf";
+// const CUSTOMER_ID = "1279"; // You might want to pass this as a prop or get from context/store
 
 // const OrderHistoryScreen: React.FC = () => {
 //   const [orderHistory, setOrderHistory] = useState<OrderHistoryItem[]>([]);
 //   const [isLoading, setIsLoading] = useState(true);
 //   const [refreshing, setRefreshing] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
 
 //   const fetchOrderHistory = async () => {
 //     try {
 //       setIsLoading(true);
-//       const response = await axios.get(`${BACKEND_URL}/getOrderHistory`);
+//       const url = `${BACKEND_URL}/getOrderHistory/${CUSTOMER_ID}`;
+//       console.log('Fetching from:', url);
       
-//       if (response.data.success) {
-//         // Sort orders by most recent first
-//         const sortedOrders = response.data.data.sort((a: { ORDER_DATE: string | number | Date; }, b: { ORDER_DATE: string | number | Date; }) => 
-//           new Date(b.ORDER_DATE).getTime() - new Date(a.ORDER_DATE).getTime()
-//         );
-//         setOrderHistory(sortedOrders);
-//         setError(null);
+//       // Add your authentication token here
+//       const token = 'your-auth-token'; // Get this from your auth context/store
+      
+//       const response = await axios.get(url, {
+//         timeout: 10000,
+//         headers: {
+//           'Accept': 'application/json',
+//           'Content-Type': 'application/json',
+//           'Authorization': `Bearer ${token}` // Add authentication header
+//         }
+//       });
+      
+//       console.log('Response:', response.data);
+      
+//       if (response.data.success && Array.isArray(response.data.data)) {
+//         const processedOrders = response.data.data.map((item: OrderHistoryItem) => ({
+//           ORDER_ID: item.ORDER_ID || 0,
+//           LOT_NO: item.LOT_NO || 'N/A',
+//           ITEM_ID: item.ITEM_ID || 0,
+//           ITEM_NAME: item.ITEM_NAME || 'Unknown Item',
+//           ORDER_DATE: item.ORDER_DATE || 'Unknown Date',
+//           QUANTITY: item.QUANTITY || 1
+//         }));
+
+//         setOrderHistory(processedOrders);
 //       } else {
-//         setError(response.data.message || 'Failed to fetch order history');
+//         console.log('No data or invalid format:', response.data);
+//         setOrderHistory([]);
+//         Alert.alert('No Orders', 'No order history found.');
 //       }
-//     } catch (err: any) {
-//       setError(err.response?.data?.message || err.message || 'An error occurred');
+//     } catch (error: any) {
+//       console.error('Error details:', {
+//         message: error.message,
+//         response: error.response?.data,
+//         status: error.response?.status,
+//         url: error.config?.url
+//       });
+
+//       let errorMessage = 'Failed to fetch order history. ';
+//       if (error.response?.status === 401) {
+//         errorMessage = 'Authentication error. Please log in again.';
+//       } else if (error.response?.status === 404) {
+//         errorMessage = 'No orders found for this customer.';
+//       } else if (error.response) {
+//         errorMessage += `Server error: ${error.response.status}`;
+//       } else if (error.request) {
+//         errorMessage += 'No response from server. Check server connection.';
+//       } else {
+//         errorMessage += error.message;
+//       }
+
+//       Alert.alert('Error', errorMessage);
+//       setOrderHistory([]);
 //     } finally {
 //       setIsLoading(false);
 //       setRefreshing(false);
 //     }
 //   };
 
-//   // Use useFocusEffect to refetch when screen comes into focus
-//   useFocusEffect(
-//     React.useCallback(() => {
-//       fetchOrderHistory();
-//     }, [])
-//   );
-
-//   const onRefresh = () => {
-//     setRefreshing(true);
+//   useEffect(() => {
 //     fetchOrderHistory();
+//   }, []);
+
+//   const formatDate = (dateString: string) => {
+//     try {
+//       const date = new Date(dateString);
+//       return date.toLocaleDateString('en-US', {
+//         month: 'short',
+//         day: 'numeric',
+//         hour: '2-digit',
+//         minute: '2-digit'
+//       });
+//     } catch (error) {
+//       console.error('Date formatting error:', error);
+//       return dateString;
+//     }
 //   };
 
-//   const renderOrderItem = ({ item }: { item: OrderHistoryItem }) => (
-//     <View style={styles.orderItemContainer}>
-//       <View style={styles.orderHeader}>
-//         <Text style={styles.itemName} numberOfLines={1}>{item.ITEM_NAME}</Text>
-//         <Text style={styles.orderDate}>{item.ORDER_DATE}</Text>
-//       </View>
-      
-//       <View style={styles.orderDetails}>
-//         <View style={styles.detailColumn}>
-//           <DetailRow label="Order ID" value={item.ORDER_ID.toString()} />
-//           <DetailRow label="Lot No" value={item.LOT_NO} />
-//         </View>
-//         <View style={styles.detailColumn}>
-//           <DetailRow label="Item ID" value={item.ITEM_ID.toString()} />
-//           <DetailRow label="Quantity" value={item.QUANTITY.toString()} highlighted />
-//         </View>
-//       </View>
-//     </View>
-//   );
-
-//   const DetailRow = ({ label, value, highlighted = false }) => (
-//     <View style={styles.detailRow}>
-//       <Text style={styles.detailLabel}>{label}</Text>
-//       <Text style={[styles.detailValue, highlighted && styles.highlightedValue]}>{value}</Text>
-//     </View>
-//   );
-
-//   if (isLoading && !refreshing) {
+//   const renderOrderItem = ({ item }: { item: OrderHistoryItem }) => {
 //     return (
-//       <View style={styles.centerContainer}>
-//         <ActivityIndicator size="large" color="#4CAF50" />
+//       <View style={styles.tile}>
+//         <View style={styles.tileHeader}>
+//           <View style={styles.orderInfo}>
+//             <Text style={styles.orderId}>#{item.ORDER_ID}</Text>
+//             <Text style={styles.date}>{formatDate(item.ORDER_DATE)}</Text>
+//           </View>
+//         </View>
+
+//         <View style={styles.tileBody}>
+//           <View style={styles.itemInfo}>
+//             <Text style={styles.itemName} numberOfLines={1}>
+//               {item.ITEM_NAME}
+//             </Text>
+//             <View style={styles.quantityBadge}>
+//               <Text style={styles.quantityText}>×{item.QUANTITY}</Text>
+//             </View>
+//           </View>
+
+//           <View style={styles.details}>
+//             <Text style={styles.detailText}>
+//               Lot: <Text style={styles.detailValue}>{item.LOT_NO}</Text>
+//             </Text>
+//             <Text style={styles.dot}>•</Text>
+//             <Text style={styles.detailText}>
+//               Item ID: <Text style={styles.detailValue}>{item.ITEM_ID}</Text>
+//             </Text>
+//           </View>
+//         </View>
 //       </View>
 //     );
-//   }
+//   };
 
-//   if (error) {
+//   if (isLoading) {
 //     return (
-//       <View style={styles.centerContainer}>
-//         <Ionicons name="alert-circle-outline" size={50} color="#FF6B6B" />
-//         <Text style={styles.errorText}>{error}</Text>
-//         <Text onPress={fetchOrderHistory} style={styles.retryButton}>
-//           Retry
-//         </Text>
+//       <View style={styles.centered}>
+//         <ActivityIndicator size="large" color="#0284C7" />
 //       </View>
 //     );
 //   }
 
 //   return (
 //     <View style={styles.container}>
-//       <Text style={styles.headerText}>Order History</Text>
-      
+//       <Text style={styles.header}>Order History</Text>
 //       <FlatList
 //         data={orderHistory}
-//         renderItem={renderOrderItem}
 //         keyExtractor={(item) => item.ORDER_ID.toString()}
-//         ListEmptyComponent={
-//           <View style={styles.centerContainer}>
-//             <Text style={styles.emptyText}>No order history found</Text>
-//           </View>
-//         }
+//         renderItem={renderOrderItem}
+//         contentContainerStyle={styles.list}
 //         refreshControl={
 //           <RefreshControl
 //             refreshing={refreshing}
-//             onRefresh={onRefresh}
-//             colors={['#4CAF50']}
-//             tintColor="#4CAF50"
+//             onRefresh={() => {
+//               setRefreshing(true);
+//               fetchOrderHistory();
+//             }}
 //           />
 //         }
 //       />
@@ -136,154 +167,152 @@
 //   );
 // };
 
- 
 // const styles = StyleSheet.create({
 //   container: {
 //     flex: 1,
-//     paddingHorizontal: 16,
-//     backgroundColor: '#f5f5f5'
+//     backgroundColor: '#F8FAFC',
 //   },
-//   centerContainer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center'
+//   header: {
+//     fontSize: 24,
+//     fontWeight: '700',
+//     color: '#0F172A',
+//     padding: 16,
+//     backgroundColor: 'white',
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#E2E8F0',
 //   },
-//   headerText: {
-//     fontSize: 22,
-//     fontWeight: 'bold',
-//     marginTop: 16,
-//     marginBottom: 16
-//   },
-//   orderItemContainer: {
-//     marginBottom: 12,
-//     borderRadius: 8,
-//     backgroundColor: '#ffffff',
+//   list: {
 //     padding: 12,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//     elevation: 3
 //   },
-//   orderHeader: {
+//   tile: {
+//     backgroundColor: 'white',
+//     borderRadius: 12,
+//     marginBottom: 8,
+//     padding: 12,
+//     borderWidth: 1,
+//     borderColor: '#E2E8F0',
+//   },
+//   tileHeader: {
 //     flexDirection: 'row',
 //     justifyContent: 'space-between',
 //     alignItems: 'center',
-//     marginBottom: 8
+//     marginBottom: 8,
+//   },
+//   orderInfo: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//   },
+//   orderId: {
+//     fontSize: 15,
+//     fontWeight: '600',
+//     color: '#0F172A',
+//     marginRight: 8,
+//   },
+//   date: {
+//     fontSize: 13,
+//     color: '#64748B',
+//   },
+//   tileBody: {
+//     gap: 8,
+//   },
+//   itemInfo: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
 //   },
 //   itemName: {
-//     fontSize: 16,
-//     fontWeight: '600',
-//     color: '#333',
-//     flex: 1,
-//     marginRight: 8
-//   },
-//   orderDate: {
-//     fontSize: 12,
-//     color: '#666'
-//   },
-//   orderDetails: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between'
-//   },
-//   detailColumn: {
-//     flex: 1
-//   },
-//   detailRow: {
-//     marginBottom: 8
-//   },
-//   detailLabel: {
-//     fontSize: 12,
-//     color: '#777'
-//   },
-//   detailValue: {
 //     fontSize: 14,
 //     fontWeight: '500',
-//     color: '#333'
+//     color: '#334155',
+//     flex: 1,
+//     marginRight: 8,
 //   },
-//   highlightedValue: {
-//     color: '#FF5722'
+//   quantityBadge: {
+//     backgroundColor: '#F1F5F9',
+//     paddingHorizontal: 8,
+//     paddingVertical: 4,
+//     borderRadius: 6,
 //   },
-//   errorText: {
-//     color: '#FF6B6B',
-//     marginTop: 16,
-//     textAlign: 'center'
+//   quantityText: {
+//     fontSize: 13,
+//     fontWeight: '500',
+//     color: '#475569',
 //   },
-//   retryButton: {
-//     color: '#4CAF50',
-//     marginTop: 16,
-//     fontWeight: '600'
+//   details: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
 //   },
-//   emptyText: {
-//     fontSize: 16,
-//     color: '#666',
-//     textAlign: 'center'
-//   }
+//   detailText: {
+//     fontSize: 13,
+//     color: '#64748B',
+//   },
+//   detailValue: {
+//     color: '#334155',
+//     fontWeight: '500',
+//   },
+//   dot: {
+//     fontSize: 13,
+//     color: '#CBD5E1',
+//     marginHorizontal: 6,
+//   },
+//   centered: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
 // });
 
 // export default OrderHistoryScreen;
 
 
-import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  ActivityIndicator, 
-  RefreshControl,
-  Alert 
-} from 'react-native';
-import axios from 'axios';
 
-// Define the structure of an order history item based on your data
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+
 interface OrderHistoryItem {
   ORDER_ID: number;
-  LOT_NO: string | null;
-  ITEM_NAME: string | null;
+  CUSTOMERID: string;
+  ITEM_ID: number;
+  ITEM_NAME: string;
   ORDER_DATE: string;
-  CUSTOMER_ID: number | null;
+  QUANTITY: number;
+  LOT_NO: string;
 }
 
-const BACKEND_URL = "http://192.168.1.37:3000/sf";
+const BACKEND_URL = "http://192.168.1.3:3000/sf";
+const CUSTOMER_ID = "1279"; // Replace or fetch dynamically
 
 const OrderHistoryScreen: React.FC = () => {
   const [orderHistory, setOrderHistory] = useState<OrderHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch order history from the backend
   const fetchOrderHistory = async () => {
     try {
       setIsLoading(true);
-      
-      // Make sure this matches your exact backend route
-      const response = await axios.get(`${BACKEND_URL}/getOrderHistory`);
-      
-      if (response.data.success && response.data.data) {
-        // Transform and sanitize the data
-        const processedOrders = response.data.data.map((item: any) => ({
-          ORDER_ID: item.ORDER_ID || 0,
-          LOT_NO: item.LOT_NO || 'N/A',
-          ITEM_NAME: item.ITEM_NAME || 'Unknown Item',
-          ORDER_DATE: item.ORDER_DATE || 'Unknown Date',
-          CUSTOMER_ID: item.CUSTOMER_ID || null
-        }));
+      const url = `${BACKEND_URL}/getOrderHistory/${CUSTOMER_ID}`;
+      console.log('Fetching from:', url);
 
-        // Sort orders by most recent first
-        const sortedOrders = processedOrders.sort((a, b) => 
-          new Date(b.ORDER_DATE).getTime() - new Date(a.ORDER_DATE).getTime()
-        );
+      const token = 'your-auth-token'; // Replace with actual token
+      const response = await axios.get(url, {
+        timeout: 10000,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-        setOrderHistory(sortedOrders);
+      if (response.data.success && Array.isArray(response.data.data)) {
+        setOrderHistory(response.data.data);
       } else {
-        // Handle case where no orders are found
-        setOrderHistory([]);
         Alert.alert('No Orders', 'No order history found.');
+        setOrderHistory([]);
       }
     } catch (error: any) {
       console.error('Error fetching order history:', error);
-      Alert.alert('Error', 'Failed to fetch order history. Please try again.');
+      Alert.alert('Error', 'Failed to fetch order history.');
       setOrderHistory([]);
     } finally {
       setIsLoading(false);
@@ -291,151 +320,67 @@ const OrderHistoryScreen: React.FC = () => {
     }
   };
 
-  // Initial fetch when component mounts
   useEffect(() => {
     fetchOrderHistory();
   }, []);
 
-  // Render individual order item
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
   const renderOrderItem = ({ item }: { item: OrderHistoryItem }) => (
-    <View style={styles.orderItemContainer}>
-      <View style={styles.orderHeader}>
-        <Text style={styles.orderIdText}>Order #{item.ORDER_ID}</Text>
-        <Text style={styles.orderDateText}>{item.ORDER_DATE}</Text>
-      </View>
-      
-      <View style={styles.orderDetails}>
-        <Text style={styles.itemNameText}>
-          {item.ITEM_NAME || 'No Item Name'}
-        </Text>
-        
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Lot No:</Text>
-          <Text style={styles.detailValue}>{item.LOT_NO || 'N/A'}</Text>
-        </View>
-        
-        {item.CUSTOMER_ID && (
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Customer ID:</Text>
-            <Text style={styles.detailValue}>{item.CUSTOMER_ID}</Text>
-          </View>
-        )}
-      </View>
+    <View style={styles.tile}>
+      <Text style={styles.orderId}>Order ID: {item.ORDER_ID}</Text>
+      <Text>Customer ID: {item.CUSTOMERID}</Text>
+      <Text>Item: {item.ITEM_NAME}</Text>
+      <Text>Quantity: {item.QUANTITY}</Text>
+      <Text>Lot No: {item.LOT_NO}</Text>
+      <Text>Date: {formatDate(item.ORDER_DATE)}</Text>
     </View>
   );
 
-  // Render loading state
   if (isLoading) {
     return (
-      <View style={styles.centeredContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Loading Order History...</Text>
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#0284C7" />
       </View>
     );
   }
 
-  // Render empty state
-  if (orderHistory.length === 0) {
-    return (
-      <View style={styles.centeredContainer}>
-        <Text style={styles.emptyStateText}>No Order History Found</Text>
-        <Text style={styles.emptyStateSubText}>Your orders will appear here</Text>
-      </View>
-    );
-  }
-
-  // Main render with order history list
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={orderHistory}
-        keyExtractor={(item) => item.ORDER_ID.toString()}
-        renderItem={renderOrderItem}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              fetchOrderHistory();
-            }}
-            colors={['#0000ff']}
-          />
-        }
-      />
-    </View>
+    <FlatList
+      data={orderHistory}
+      keyExtractor={(item) => item.ORDER_ID.toString()}
+      renderItem={renderOrderItem}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            setRefreshing(true);
+            fetchOrderHistory();
+          }}
+        />
+      }
+      contentContainerStyle={styles.list}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  centeredContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  orderItemContainer: {
-    backgroundColor: 'white',
-    marginVertical: 8,
-    marginHorizontal: 16,
-    borderRadius: 10,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  orderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  orderIdText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  orderDateText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  orderDetails: {
-    marginTop: 8,
-  },
-  itemNameText: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#333',
-  },
-  detailRow: {
-    flexDirection: 'row',
-    marginBottom: 4,
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginRight: 8,
-  },
-  detailValue: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
-  },
-  emptyStateText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#666',
-  },
-  emptyStateSubText: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 8,
-  },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  list: { padding: 16 },
+  tile: { padding: 16, marginBottom: 8, backgroundColor: '#fff', borderRadius: 8 },
+  orderId: { fontWeight: 'bold' },
 });
 
 export default OrderHistoryScreen;

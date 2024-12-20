@@ -29,7 +29,7 @@ import Header from "./Header"; // Update path as needed
 import { useCart } from "./contexts/CartContext";
 import { useDisplayName } from "./contexts/DisplayNameContext";
 
-const BACKEND_URL = "http://192.168.1.37:3000";
+const BACKEND_URL = "http://192.168.1.3:3000";
 
 interface HomeScreenParams {
   initialLogin?: boolean;
@@ -53,7 +53,7 @@ type CategoryItem = {
 };
 
 const { width } = Dimensions.get("window");
-const BASE_IMAGE_PATH = 'http://192.168.1.37:3000/assets/images'; // Adjust this to your image server path
+const BASE_IMAGE_PATH = 'http://192.168.1.3:3000/assets/images'; // Adjust this to your image server path
 // const imageService = ImageService.getInstance();
 
 
@@ -241,7 +241,7 @@ const HomeScreen: React.FC = () => {
           setCustomerID(id);
           await AsyncStorage.setItem("customerID", id);
         } else {
-          const response = await axios.get("http://192.168.1.37/getCustomerID");
+          const response = await axios.get("http://192.168.1.3/getCustomerID");
           id = response.data.customerID;
           setCustomerID(id);
           await AsyncStorage.setItem("customerID", id || "");

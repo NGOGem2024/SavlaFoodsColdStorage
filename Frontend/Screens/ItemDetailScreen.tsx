@@ -18,7 +18,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { MainStackParamList } from "../../App";
  
-const BACKEND_URL = "http://192.168.1.37:3000/sf";
+const BACKEND_URL = "http://192.168.1.3:3000/sf";
 const { width } = Dimensions.get("window");
  
 interface Item {

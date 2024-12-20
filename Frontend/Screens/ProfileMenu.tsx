@@ -804,7 +804,7 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { RootStackParamList } from "../type/types";
 import { useDisplayName } from "./contexts/DisplayNameContext";
 
-const BACKEND_URL = "http://192.168.43.4:3000"; // Update with your actual backend URL
+const BACKEND_URL = "http://192.168.3:3000"; // Update with your actual backend URL
 
 interface ProfileMenuProps {
   displayName: string | null;

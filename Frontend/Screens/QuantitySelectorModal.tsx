@@ -15,7 +15,7 @@ import {
 import { MainStackParamList } from '../../App';
 import { useCart } from '../Screens/contexts/CartContext';
  
-const BACKEND_URL = "http://192.168.1.37:3000/sf";
+const BACKEND_URL = "http://192.168.1.3:3000/sf";
  
 interface QuantitySelectorModalProps {
   isVisible: boolean;
@@ -29,7 +29,6 @@ interface QuantitySelectorModalProps {
     customerID?: number | string;
     vakal_no?: string;
     item_marks?: string;
-     
   };
   onClose: () => void;
 }
@@ -86,11 +85,9 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
     }
   };
  
- 
- 
   const handleConfirm = () => {
     const quantity = parseInt(inputValue) || 0;
-   
+ 
     if (quantity <= 0) {
       Alert.alert(
         'Invalid Quantity',
@@ -108,29 +105,22 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
       return;
     }
  
-    // Create order item explicitly for navigation
-    const orderItem = {
-      LOT_NO: item.lot_no,
-      ITEM_ID: item.item_id,
-      ITEM_NAME: item.item_name,
-      VAKAL_NO: item.vakal_no || '',
-      ITEM_MARKS: item.item_marks || '',
-      UNIT_NAME: item.unit_name,
-      // BOX_QUANTITY: item.box_quantity || 0,
-      BALANCE_QTY: item.available_qty || 0,
-      UPDATED_QTY: [quantity],
-      ORDERED_QUANTITY: quantity,
-      CUSTOMER_ID: item.customerID,
+    // Create cart item with proper quantity
+    const cartItem = {
+      item_id: item.item_id,
+      item_name: item.item_name,
+      lot_no: item.lot_no,
+      vakal_no: item.vakal_no || '',
+      item_marks: item.item_marks || '',
+      unit_name: item.unit_name,
+      available_qty: item.available_qty,
+      quantity: quantity, // Store the selected quantity
+      customerID: item.customerID,
     };
  
-    // Add to cart
-    addToCart({
-      ...item,
-      quantity,
-      available_qty: item.available_qty,
-    });
+    // Add to cart with the selected quantity
+    addToCart(cartItem);
  
-    // Display the popup
     Alert.alert(
       'Added to Cart',
       `${quantity} ${quantity > 1 ? 'items' : 'item'} added to your cart`,
@@ -143,9 +133,9 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
         {
           text: 'Go to Cart',
           onPress: () => {
-            onClose(); // Close the modal
+            onClose();
             navigation.navigate('PlaceOrderScreen', {
-              selectedItems: [orderItem],
+              selectedItems: [],
               customerID: item.customerID,
             });
           },
@@ -156,7 +146,8 @@ const QuantitySelectorModal: React.FC<QuantitySelectorModalProps> = ({
     );
   };
  
-  return (
+ 
+return (
     <Modal
       transparent={true}
       visible={isVisible}
@@ -338,3 +329,4 @@ const styles = StyleSheet.create({
 });
  
 export default QuantitySelectorModal;
+ 
