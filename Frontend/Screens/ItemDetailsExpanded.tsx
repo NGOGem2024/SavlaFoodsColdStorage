@@ -402,6 +402,10 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
                   {formatQuantity(stock.AVAILABLE_QTY)}
                 </Text>
               </View>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Remarks</Text>
+                <Text style={styles.detailValue}>{stock.REMARKS || "N/A"}</Text>
+              </View>
               {/* <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Available Quantity</Text>
                 <Text style={styles.detailValue}>
@@ -410,7 +414,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
  
               {/* </View> */}
             </View>
-            <View style={styles.detailRow}>
+            {/* <View style={styles.detailRow}>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Expiry Date</Text>
                 <Text style={styles.detailValue}>
@@ -421,7 +425,7 @@ const ItemDetailsExpanded: React.FC<ItemDetailsExpandedProps> = ({ route, naviga
                 <Text style={styles.detailLabel}>Remarks</Text>
                 <Text style={styles.detailValue}>{stock.REMARKS || "N/A"}</Text>
               </View>
-            </View>
+            </View> */}
           </View>
         </Animated.View>
       ))}

@@ -94,9 +94,9 @@ import {
   StackScreenProps,
 } from "@react-navigation/stack";
 import React from "react";
-import InwardsScreen from "./ExtraScreens/InwardsScreen";
 import ExpiringProductsScreen from "./ExtraScreens/ExpiringProductsScreen";
 import InvoicesScreen from "./ExtraScreens/InvoicesScreen";
+import InwardsScreen from "./ExtraScreens/InwardsScreen";
 import OrderPlacementScreen from "./ExtraScreens/OrderPlacementScreen";
 import OutwardsScreen from "./ExtraScreens/OutwardsScreen";
 import ProductSearchScreen from "./ExtraScreens/ProductSearchScreen";
@@ -105,16 +105,15 @@ import BottomTabNavigator from "./Frontend/Screens/BottomTabs/BottomTabNavigator
 import { CartProvider } from "./Frontend/Screens/contexts/CartContext";
 import { DisplayNameProvider } from "./Frontend/Screens/contexts/DisplayNameContext";
 import { NotificationProvider } from "./Frontend/Screens/contexts/NotificationContext";
-import HomeScreen from "./Frontend/Screens/HomeScreen";
 import ItemDetailScreen from "./Frontend/Screens/ItemDetailScreen";
 import ItemDetailsExpanded from "./Frontend/Screens/ItemDetailsExpanded";
 import LotReportScreen from "./Frontend/Screens/LotReportScreen";
 import OtpVerification from "./Frontend/Screens/OtpVerificationScreen";
 import PlaceOrderScreen from "./Frontend/Screens/PlaceOrderScreen";
+import QuantitySelectorModal from "./Frontend/Screens/QuantitySelectorModal";
 import SplashScreen from "./Frontend/Screens/SplashScreen";
 import StocksScreen from "./Frontend/Screens/StocksScreen";
 import SubCategory from "./Frontend/Screens/SubCategory";
-import QuantitySelectorModal from "./Frontend/Screens/QuantitySelectorModal";
 // import { Item } from './Frontend/type/types'
 // import {CartItem} from '././Frontend/type/types'
 
@@ -309,7 +308,7 @@ const MainStackNavigator: React.FC = () => {
         component={OrderPlacementScreen}
       />
       <MainStack.Screen name="PlaceOrderScreen" component={PlaceOrderScreen}    options={({ route }) => ({
-          title:"Place Order",
+          title:"My Orders",
         })}/>
       <MainStack.Screen
         name="SubCategory"
