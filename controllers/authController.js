@@ -1,92 +1,22 @@
 // //finalfinal
-
+ 
 const jwt = require("jsonwebtoken");
 const oracledb = require("oracledb");
 const db = require("../config/database");
-
-
-const nodemailer = require('nodemailer');
-require('dotenv').config();
-
-// Email service configuration
-class EmailService {
-  constructor() {
-      this.transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-              user: process.env.EMAIL_USER,
-              pass: process.env.EMAIL_APP_PASSWORD
-          }
-      });
-  }
-
-  async sendOrderConfirmation(orderDetails, customerEmail, customerName, mobileNo) {
-      // Add email validation
-      if (!customerEmail || typeof customerEmail !== 'string' || !customerEmail.includes('@')) {
-          console.error('Invalid email address:', customerEmail);
-          throw new Error('Invalid email address');
-      }
-
-      // Debug log
-      console.log('Sending email to:', customerEmail);
-      console.log('Order details:', orderDetails);
-
-      const emailTemplate = {
-          from: process.env.EMAIL_USER,
-          to: customerEmail.trim(), // Trim any whitespace
-          subject: `Order Confirmation #${orderDetails.orderID}`,
-          html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                  <h1 style="color: #333; text-align: center;">Order Confirmation</h1>
-                  <p>Dear ${customerName || 'Valued Customer'},</p>
-                  <p>Your order #${orderDetails.orderID} has been successfully placed.</p>
-                  
-                  <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
-                      <h2 style="color: #444;">Order Details:</h2>
-                      <ul>
-                          ${orderDetails.items.map(item => `
-                              <li>Item ID: ${item.ItemID}<br>
-                               <li>Lot No: ${item.LotNo} <br>
-                               <li>Quantity: ${item.Quantity}</li>
-                          `).join('')}
-                      </ul>
-                  </div>
-
-                  <div style="margin-top: 30px; text-align: center; color: #666;">
-                      <p>Thank you for your order!</p>
-                      <p>If you have any questions, please contact our support team.</p>
-                  </div>
-              </div>
-          `
-      };
-
-      try {
-          // Debug log before sending
-          console.log('Email configuration:', {
-              from: emailTemplate.from,
-              to: emailTemplate.to,
-              subject: emailTemplate.subject
-          });
-
-          const info = await this.transporter.sendMail(emailTemplate);
-          console.log('Email sent successfully:', info.messageId);
-          return true;
-      } catch (error) {
-          console.error('Error sending email:', error);
-          throw error;
-      }
-  }
-}
-
+const EmailService = require('../services/EmailService');
+const NotificationService = require('../services/NotificationService');
+ 
+ 
+ 
 const JWT_SECRET =
   process.env.JWT_SECRET ||
   "JhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
-
+ 
 const authController = {
   // getUserAccountID with customer group information
   async getUserAccountID(req, res) {
     const { sf_userName, sf_userPwd } = req.body;
-
+ 
     if (!sf_userName || !sf_userPwd) {
       return res.status(400).json({
         message: "Username and password are required",
@@ -95,18 +25,18 @@ const authController = {
         },
       });
     }
-
+ 
     try {
       const userCheck = await db.execute(
-        `SELECT 
+        `SELECT
           FK_CUSTOMER_ID,
           MOBILE_NO,
           USER_PASSWORD,
           USER_NAME,
           FK_CUST_GROUP_ID,
           DISP_NAME
-        FROM CUSTOMER_LOGIN1 
-        WHERE UPPER(USER_NAME) = UPPER(:sf_userName) 
+        FROM CUSTOMER_LOGIN1
+        WHERE UPPER(USER_NAME) = UPPER(:sf_userName)
         AND USER_PASSWORD = :sf_userPwd`,
         {
           sf_userName: sf_userName.trim(),
@@ -114,14 +44,14 @@ const authController = {
         },
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-
+ 
       if (!userCheck.rows || userCheck.rows.length === 0) {
         return res.status(401).json({
           message: "Invalid credentials",
           debug: "Username not found",
         });
       }
-
+ 
       const user = userCheck.rows[0];
       if (user.USER_PASSWORD !== sf_userPwd) {
         return res.status(401).json({
@@ -129,7 +59,7 @@ const authController = {
           debug: "Password mismatch",
         });
       }
-
+ 
       const token = jwt.sign(
         {
           customerId: user.FK_CUSTOMER_ID,
@@ -140,7 +70,7 @@ const authController = {
         JWT_SECRET,
         { expiresIn: "24h" }
       );
-
+ 
       res.json({
         input: { sf_userName },
         output: {
@@ -160,19 +90,19 @@ const authController = {
       });
     }
   },
-
+ 
   async listAccounts(req, res) {
     const { FK_CUST_GROUP_ID } = req.body;
-
+ 
     console.log("Received request with FK_CUST_GROUP_ID:", FK_CUST_GROUP_ID);
-
+ 
     if (!FK_CUST_GROUP_ID) {
       return res.status(400).json({
         message: "Customer Group ID is required",
         debug: { provided: { customerGroupId: !!FK_CUST_GROUP_ID } },
       });
     }
-
+ 
     try {
       const query = await db.execute(
         `SELECT DISTINCT
@@ -194,11 +124,11 @@ const authController = {
         { FK_CUST_GROUP_ID },
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-
+ 
       console.log("Query results:", query.rows);
-
+ 
       const groups = query.rows || [];
-
+ 
       if (groups.length === 0) {
         console.log("No groups found for FK_CUST_GROUP_ID:", FK_CUST_GROUP_ID);
         return res.status(404).json({
@@ -209,7 +139,7 @@ const authController = {
           },
         });
       }
-
+ 
       // Remove duplicates by creating a unique key for each record
       const uniqueGroups = Array.from(
         new Map(
@@ -225,7 +155,7 @@ const authController = {
           ])
         ).values()
       );
-
+ 
       res.json({
         input: { FK_CUST_GROUP_ID },
         output: {
@@ -244,35 +174,35 @@ const authController = {
       });
     }
   },
-
+ 
   async getItemCatSubCat(req, res) {
     const { CustomerID } = req.body;
     const { displayName } = req.user;
-
+ 
     if (!CustomerID) {
       return res.status(400).json({ message: "CustomerID is required" });
     }
-
+ 
     try {
       // First verify if the customer exists
       const customerCheck = await db.execute(
-        `SELECT FK_CUSTOMER_ID 
+        `SELECT FK_CUSTOMER_ID
             FROM CUSTOMER_LOGIN1
             WHERE FK_CUSTOMER_ID = :1`,
         [CustomerID], // Use array for binding parameters
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-
+ 
       if (customerCheck.rows.length === 0) {
         return res.status(404).json({
           message: "Customer not found",
           debug: `No customer found with ID: ${CustomerID}`,
         });
       }
-
+ 
       // Get categories and subcategories
       const result = await db.execute(
-        `SELECT DISTINCT 
+        `SELECT DISTINCT
                c.ITEM_CATEG_ID AS CATID,
                c.ITEM_CATEG_CODE AS CATCODE,
                c.ITEM_CATEG_NAME AS CATDESC,
@@ -281,7 +211,7 @@ const authController = {
                d.SUB_CATEGORY_NAME AS SUBCATDESC,
                'C' || c.ITEM_CATEG_ID || '.jpg' AS CATEGORY_IMAGE_NAME,
                'SC' || d.ITEM_SUB_CATEGORY_ID || '.jpg' AS SUBCATEGORY_IMAGE_NAME
-           FROM SYSTEM.STOCK_LOTNO a 
+           FROM SYSTEM.STOCK_LOTNO a
            INNER JOIN ITEM_MASTER b ON a.FK_ITEM_ID = b.ITEM_ID
            INNER JOIN ITEM_CATEGORY c ON b.FK_CATEGORY_ID = c.ITEM_CATEG_ID
            INNER JOIN ITEM_SUB_CATEGORY d ON b.FK_SUBCATEGORY_ID = d.ITEM_SUB_CATEGORY_ID
@@ -290,7 +220,7 @@ const authController = {
         [CustomerID], // Use array for binding parameters
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-
+ 
       if (result.rows && result.rows.length > 0) {
         res.json({
           input: { CustomerID, displayName },
@@ -314,7 +244,7 @@ const authController = {
     let connection;
     try {
       const { SubCategoryID, CustomerID } = req.body;
-
+ 
       // Input validation
       if (!SubCategoryID || !CustomerID) {
         return res.status(400).json({
@@ -322,11 +252,11 @@ const authController = {
           message: "SubCategoryID and CustomerID are required",
         });
       }
-
+ 
       // Convert to numbers explicitly
       const subCategoryIdNumber = parseInt(SubCategoryID, 10);
       const customerIdNumber = parseInt(CustomerID, 10);
-
+ 
       // Validate numbers
       if (isNaN(subCategoryIdNumber) || isNaN(customerIdNumber)) {
         return res.status(400).json({
@@ -334,23 +264,23 @@ const authController = {
           message: "SubCategoryID and CustomerID must be valid numbers",
         });
       }
-
+ 
       connection = await oracledb.getConnection();
-
+ 
       const result = await connection.execute(
-        `SELECT DISTINCT 
+        `SELECT DISTINCT
               d.ITEM_SUB_CATEGORY_ID,
               b.ITEM_ID,
               b.ITEM_CODE,
               b.DESCRIPTION,
               b.ITEM_NAME
-          FROM SYSTEM.STOCK_LOTNO a 
+          FROM SYSTEM.STOCK_LOTNO a
           INNER JOIN ITEM_MASTER b ON a.FK_ITEM_ID = b.ITEM_ID
           INNER JOIN ITEM_CATEGORY c ON b.FK_CATEGORY_ID = c.ITEM_CATEG_ID
           INNER JOIN ITEM_SUB_CATEGORY d ON b.FK_SUBCATEGORY_ID = d.ITEM_SUB_CATEGORY_ID
-          WHERE a.FK_CUSTOMER_ID = :CustomerID 
+          WHERE a.FK_CUSTOMER_ID = :CustomerID
           AND b.FK_SUBCATEGORY_ID = :SubCategoryID
-          GROUP BY 
+          GROUP BY
               d.ITEM_SUB_CATEGORY_ID,
               b.ITEM_ID,
               b.ITEM_CODE,
@@ -363,14 +293,14 @@ const authController = {
         },
         { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
-
+ 
       if (result.rows.length === 0) {
         return res.status(404).json({
           status: "error",
           message: "No items found for this subcategory",
         });
       }
-
+ 
       return res.status(200).json({
         status: "success",
         input: {
@@ -399,15 +329,15 @@ const authController = {
       }
     }
   },
-
-
+ 
+ 
   async getItemDetailsWithStock(req, res) {
     const { ItemID, CustomerID } = req.body;
-
+ 
     // Validate ItemID
     const parsedItemID = parseInt(ItemID, 10);
     const parsedCustomerID = parseInt(CustomerID, 10);
-
+ 
     // Validate input parameters
     if (isNaN(parsedItemID)) {
       return res.status(400).json({
@@ -415,18 +345,18 @@ const authController = {
         message: "Invalid ItemID. Must be a number.",
       });
     }
-
+ 
     if (isNaN(parsedCustomerID)) {
       return res.status(400).json({
         success: false,
         message: "Invalid CustomerID. Must be a number.",
       });
     }
-
+ 
     let connection;
     try {
       connection = await db.getConnection();
-
+ 
       // Optimized single query to fetch item and stock details
       const query = `
         SELECT DISTINCT
@@ -462,7 +392,7 @@ const authController = {
           AND a.AVAILABLE_QTY > 0
           AND b.ITEM_ID = :ItemID
       `;
-
+ 
       const result = await connection.execute(
         query,
         {
@@ -473,7 +403,7 @@ const authController = {
           outFormat: oracledb.OUT_FORMAT_OBJECT,
         }
       );
-
+ 
       // Check if any results found
       if (result.rows.length === 0) {
         return res.status(404).json({
@@ -481,7 +411,7 @@ const authController = {
           message: "No stock details found for the specified item and customer",
         });
       }
-
+ 
       // Prepare response object
       const response = {
         success: true,
@@ -513,7 +443,7 @@ const authController = {
           })),
         },
       };
-
+ 
       return res.status(200).json(response);
     } catch (error) {
       console.error("Error in getItemDetailsWithStock:", error);
@@ -532,149 +462,167 @@ const authController = {
       }
     }
   },
+ 
+ 
+ 
+ 
+//23/12
 
-
-
-//try
-async getItemDetailsAndUpdateStock(req, res) {
+async  getItemDetailsAndUpdateStock(req, res) {
   const { CustomerID, items } = req.body;
   const emailService = new EmailService();
+  const notificationService = new NotificationService();
   let connection;
 
   try {
-      connection = await db.getConnection();
-      await connection.execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
+    connection = await db.getConnection();
+    await connection.execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
 
-      // Get customer details
-      const customerQuery = `
-          SELECT email, disp_name, mobile_no
-          FROM customer_login1
-          WHERE fk_customer_id = :CustomerID
+    // Get customer details
+    const customerQuery = `
+      SELECT email, disp_name, mobile_no
+      FROM customer_login1
+      WHERE fk_customer_id = :CustomerID
+    `;
+    const customerResult = await connection.execute(
+      customerQuery,
+      { CustomerID },
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+
+    if (!customerResult.rows[0]) {
+      throw new Error('Customer details not found');
+    }
+
+    const { EMAIL, DISP_NAME, MOBILE_NO } = customerResult.rows[0];
+
+    // Fetch item details and validate stock
+    const itemDetailsWithNames = [];
+    for (const item of items) {
+      const { LotNo, ItemID, Quantity } = item;
+      
+      const itemQuery = `
+        SELECT sl.fk_item_id, sl.lot_no, sl.available_qty, im.item_name
+        FROM stock_lotno sl
+        JOIN item_master im ON sl.fk_item_id = im.item_id
+        WHERE sl.fk_customer_id = :CustomerID
+          AND sl.fk_item_id = :ItemID
+          AND sl.lot_no = :LotNo
       `;
-      const customerResult = await connection.execute(
-          customerQuery,
-          { CustomerID },
-          { outFormat: oracledb.OUT_FORMAT_OBJECT }
+      
+      const itemResult = await connection.execute(
+        itemQuery,
+        { CustomerID, ItemID, LotNo },
+        { outFormat: oracledb.OUT_FORMAT_OBJECT }
       );
 
-      if (!customerResult.rows[0]) {
-          throw new Error('Customer details not found');
-      }
-
-      const { EMAIL, DISP_NAME, MOBILE_NO } = customerResult.rows[0];
-
-      // Validate stock availability
-      for (const item of items) {
-          const { LotNo, ItemID, Quantity } = item;
-          const verifyStockQuery = `
-              SELECT COUNT(*) AS count
-              FROM stock_lotno
-              WHERE fk_customer_id = :CustomerID
-                  AND fk_item_id = :ItemID
-                  AND lot_no = :LotNo
-                  AND available_qty >= :Quantity
-          `;
-          const stockResult = await connection.execute(
-              verifyStockQuery,
-              { CustomerID, ItemID, LotNo, Quantity },
-              { outFormat: oracledb.OUT_FORMAT_OBJECT }
-          );
-
-          if (stockResult.rows[0].COUNT === 0) {
-              return res.status(404).json({
-                  success: false,
-                  message: `Insufficient stock for ItemID ${ItemID}, LotNo ${LotNo}, or invalid data.`,
-              });
-          }
-      }
-
-      // Generate Order ID
-      const orderSeqQuery = `SELECT SYSTEM.ORDER_SEQ.NEXTVAL AS ORDER_ID FROM DUAL`;
-      const orderSeqResult = await connection.execute(
-          orderSeqQuery,
-          {},
-          { outFormat: oracledb.OUT_FORMAT_OBJECT }
-      );
-      const orderID = orderSeqResult.rows[0].ORDER_ID;
-
-      // Insert order details for each item
-      for (const item of items) {
-          const { LotNo, ItemID, Quantity } = item;
-          
-          // Insert order with item details
-          const insertOrderQuery = `
-              INSERT INTO savla_order (
-                  order_id, customerid, order_date, item_id, quantity, lot_no
-              ) VALUES (
-                  :OrderID, :CustomerID, SYSDATE, :ItemID, :Quantity, :LotNo
-              )
-          `;
-          await connection.execute(
-              insertOrderQuery,
-              { 
-                  OrderID: orderID, 
-                  CustomerID, 
-                  ItemID, 
-                  Quantity, 
-                  LotNo 
-              },
-              { autoCommit: false }
-          );
-
-          // Update stock
-          const updateStockQuery = `
-              UPDATE stock_lotno
-              SET available_qty = available_qty - :Quantity
-              WHERE fk_customer_id = :CustomerID
-                  AND fk_item_id = :ItemID
-                  AND lot_no = :LotNo
-          `;
-          await connection.execute(
-              updateStockQuery,
-              { Quantity, CustomerID, ItemID, LotNo },
-              { autoCommit: false }
-          );
-      }
-
-      // Send email if email exists and is valid
-      if (EMAIL) {
-          try {
-              await emailService.sendOrderConfirmation(
-                  { orderID, items },
-                  EMAIL,
-                  DISP_NAME,
-                  MOBILE_NO
-              );
-              console.log('Email notification sent successfully');
-          } catch (emailError) {
-              console.error('Error sending email notification:', emailError);
-          }
-      }
-
-      await connection.commit();
-
-      return res.status(200).json({
-          success: true,
-          message: "Order placed successfully" + (EMAIL ? " and confirmation email sent" : ""),
-          orderID,
-      });
-  } catch (error) {
-      if (connection) {
-          await connection.rollback();
-      }
-      console.error("Error processing order:", error);
-      return res.status(500).json({
+      if (!itemResult.rows[0]) {
+        return res.status(404).json({
           success: false,
-          message: "Server error",
-          error: error.message,
-      });
-  } finally {
-      if (connection) {
-          await connection.close();
+          message: `Item not found or invalid data for ItemID ${ItemID}, LotNo ${LotNo}`,
+        });
       }
+
+      const { ITEM_NAME, AVAILABLE_QTY } = itemResult.rows[0];
+
+      if (AVAILABLE_QTY < Quantity) {
+        return res.status(404).json({
+          success: false,
+          message: `Insufficient stock for ${ITEM_NAME} (ItemID: ${ItemID}, LotNo: ${LotNo})`,
+        });
+      }
+
+      itemDetailsWithNames.push({
+        ...item,
+        itemName: ITEM_NAME,
+        Quantity // Add Quantity to match the NotificationService's expected format
+      });
+    }
+
+    // Generate Order ID
+    const orderSeqQuery = `SELECT SYSTEM.ORDER_SEQ.NEXTVAL AS ORDER_ID FROM DUAL`;
+    const orderSeqResult = await connection.execute(
+      orderSeqQuery,
+      {},
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+    const orderID = orderSeqResult.rows[0].ORDER_ID;
+
+    // Insert order details and update stock
+    for (const item of itemDetailsWithNames) {
+      const { LotNo, ItemID, Quantity } = item;
+      
+      const insertOrderQuery = `
+        INSERT INTO savla_order (
+          order_id, customerid, order_date, item_id, quantity, lot_no
+        ) VALUES (
+          :OrderID, :CustomerID, SYSDATE, :ItemID, :Quantity, :LotNo
+        )
+      `;
+      await connection.execute(
+        insertOrderQuery,
+        { OrderID: orderID, CustomerID, ItemID, Quantity, LotNo },
+        { autoCommit: false }
+      );
+
+      const updateStockQuery = `
+        UPDATE stock_lotno
+        SET available_qty = available_qty - :Quantity
+        WHERE fk_customer_id = :CustomerID
+          AND fk_item_id = :ItemID
+          AND lot_no = :LotNo
+      `;
+      await connection.execute(
+        updateStockQuery,
+        { Quantity, CustomerID, ItemID, LotNo },
+        { autoCommit: false }
+      );
+    }
+
+    // Send notifications
+    const customerInfo = {
+      email: EMAIL,
+      name: DISP_NAME,
+      phone: MOBILE_NO
+    };
+
+    try {
+      const notificationResults = await notificationService.sendOrderConfirmations(
+        {
+          orderID,
+          items: itemDetailsWithNames
+        },
+        customerInfo
+      );
+      console.log('Notification results:', notificationResults);
+    } catch (notificationError) {
+      console.error('Error sending notifications:', notificationError);
+      // Continue processing even if notifications fail
+    }
+
+    await connection.commit();
+
+    return res.status(200).json({
+      success: true,
+      message: "Order placed successfully and notifications sent",
+      orderID,
+    });
+  } catch (error) {
+    if (connection) {
+      await connection.rollback();
+    }
+    console.error("Error processing order:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  } finally {
+    if (connection) {
+      await connection.close();
+    }
   }
 },
-
  
 async getOrderHistory(req, res) {
   let connection;
@@ -727,5 +675,7 @@ async getOrderHistory(req, res) {
   }
 }
 };
-
+ 
 module.exports = authController;
+ 
+ 
